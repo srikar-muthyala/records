@@ -1,0 +1,11 @@
+title,category,description,author,year,isbn,publisher
+"Introduction to Programming","Computer Science","Basic programming concepts and fundamentals","John Smith","2020","978-1234567890","Tech Publishers"
+"Data Structures and Algorithms","Computer Science","Advanced data structures and algorithm design","Jane Doe","2019","978-0987654321","Algorithm Press"
+"Web Development Guide","Web Development","Complete guide to modern web development","Mike Johnson","2021","978-1122334455","Web Publishing Co"
+"Database Management","Database","Database design and management principles","Sarah Wilson","2018","978-5566778899","Data Books Inc"
+"Machine Learning Basics","Artificial Intelligence","Introduction to machine learning concepts","Dr. Alex Brown","2022","978-9988776655","AI Publications"
+"Software Engineering","Software Development","Software development lifecycle and practices","Tom Davis","2020","978-4433221100","Software Press"
+"Network Security","Cybersecurity","Network security fundamentals and practices","Lisa Garcia","2021","978-7766554433","Security Books"
+"Mobile App Development","Mobile Development","iOS and Android app development guide","Chris Lee","2022","978-3344556677","Mobile Publishers"
+"Cloud Computing","Cloud Technology","Cloud computing concepts and implementation","Maria Rodriguez","2021","978-8899001122","Cloud Publishing"
+"DevOps Practices","DevOps","DevOps culture and implementation strategies","David Kim","2020","978-2233445566","DevOps Press"
