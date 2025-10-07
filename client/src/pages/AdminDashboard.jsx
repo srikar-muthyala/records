@@ -174,6 +174,22 @@ const AdminDashboard = () => {
               transform: translateY(0);
             }
           }
+          
+          .nav-button {
+            transition: all 0.3s ease;
+          }
+          
+          .nav-button:hover:not(.active) {
+            background-color: #f3f4f6 !important;
+            color: #374151 !important;
+          }
+          
+          .nav-button.active {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+            transform: scale(1.02);
+          }
         `}
       </style>
       <div style={{
@@ -211,6 +227,7 @@ const AdminDashboard = () => {
       }}>
         <div style={{ display: 'flex', gap: '4px' }}>
           <button 
+            className={`nav-button ${activeTab === 'dashboard' ? 'active' : ''}`}
             style={{
               backgroundColor: activeTab === 'dashboard' ? '#3b82f6' : 'transparent',
               color: activeTab === 'dashboard' ? 'white' : '#6b7280',
@@ -220,37 +237,17 @@ const AdminDashboard = () => {
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
-              transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              boxShadow: activeTab === 'dashboard' ? '0 2px 4px rgba(59, 130, 246, 0.2)' : 'none',
-              transform: activeTab === 'dashboard' ? 'scale(1.02)' : 'scale(1)'
+              gap: '8px'
             }}
             onClick={() => setActiveTab('dashboard')}
-            onMouseOver={(e) => {
-              if (activeTab !== 'dashboard') {
-                e.target.style.backgroundColor = '#f3f4f6'
-                e.target.style.color = '#374151'
-              } else {
-                e.target.style.backgroundColor = '#3b82f6'
-                e.target.style.color = 'white'
-              }
-            }}
-            onMouseOut={(e) => {
-              if (activeTab !== 'dashboard') {
-                e.target.style.backgroundColor = 'transparent'
-                e.target.style.color = '#6b7280'
-              } else {
-                e.target.style.backgroundColor = '#3b82f6'
-                e.target.style.color = 'white'
-              }
-            }}
           >
             <FiUsers size={16} />
             Dashboard
           </button>
           <button 
+            className={`nav-button ${activeTab === 'users' ? 'active' : ''}`}
             style={{
               backgroundColor: activeTab === 'users' ? '#3b82f6' : 'transparent',
               color: activeTab === 'users' ? 'white' : '#6b7280',
@@ -260,37 +257,17 @@ const AdminDashboard = () => {
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
-              transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              boxShadow: activeTab === 'users' ? '0 2px 4px rgba(59, 130, 246, 0.2)' : 'none',
-              transform: activeTab === 'users' ? 'scale(1.02)' : 'scale(1)'
+              gap: '8px'
             }}
             onClick={() => setActiveTab('users')}
-            onMouseOver={(e) => {
-              if (activeTab !== 'users') {
-                e.target.style.backgroundColor = '#f3f4f6'
-                e.target.style.color = '#374151'
-              } else {
-                e.target.style.backgroundColor = '#3b82f6'
-                e.target.style.color = 'white'
-              }
-            }}
-            onMouseOut={(e) => {
-              if (activeTab !== 'users') {
-                e.target.style.backgroundColor = 'transparent'
-                e.target.style.color = '#6b7280'
-              } else {
-                e.target.style.backgroundColor = '#3b82f6'
-                e.target.style.color = 'white'
-              }
-            }}
           >
             <FiUsers size={16} />
             Users
           </button>
           <button 
+            className={`nav-button ${activeTab === 'records' ? 'active' : ''}`}
             style={{
               backgroundColor: activeTab === 'records' ? '#3b82f6' : 'transparent',
               color: activeTab === 'records' ? 'white' : '#6b7280',
@@ -300,37 +277,17 @@ const AdminDashboard = () => {
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
-              transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              boxShadow: activeTab === 'records' ? '0 2px 4px rgba(59, 130, 246, 0.2)' : 'none',
-              transform: activeTab === 'records' ? 'scale(1.02)' : 'scale(1)'
+              gap: '8px'
             }}
             onClick={() => setActiveTab('records')}
-            onMouseOver={(e) => {
-              if (activeTab !== 'records') {
-                e.target.style.backgroundColor = '#f3f4f6'
-                e.target.style.color = '#374151'
-              } else {
-                e.target.style.backgroundColor = '#3b82f6'
-                e.target.style.color = 'white'
-              }
-            }}
-            onMouseOut={(e) => {
-              if (activeTab !== 'records') {
-                e.target.style.backgroundColor = 'transparent'
-                e.target.style.color = '#6b7280'
-              } else {
-                e.target.style.backgroundColor = '#3b82f6'
-                e.target.style.color = 'white'
-              }
-            }}
           >
             <FiBook size={16} />
             Records
           </button>
           <button 
+            className={`nav-button ${activeTab === 'requests' ? 'active' : ''}`}
             style={{
               backgroundColor: activeTab === 'requests' ? '#3b82f6' : 'transparent',
               color: activeTab === 'requests' ? 'white' : '#6b7280',
@@ -340,32 +297,11 @@ const AdminDashboard = () => {
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
-              transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              boxShadow: activeTab === 'requests' ? '0 2px 4px rgba(59, 130, 246, 0.2)' : 'none',
-              transform: activeTab === 'requests' ? 'scale(1.02)' : 'scale(1)'
+              gap: '8px'
             }}
             onClick={() => setActiveTab('requests')}
-            onMouseOver={(e) => {
-              if (activeTab !== 'requests') {
-                e.target.style.backgroundColor = '#f3f4f6'
-                e.target.style.color = '#374151'
-              } else {
-                e.target.style.backgroundColor = '#3b82f6'
-                e.target.style.color = 'white'
-              }
-            }}
-            onMouseOut={(e) => {
-              if (activeTab !== 'requests') {
-                e.target.style.backgroundColor = 'transparent'
-                e.target.style.color = '#6b7280'
-              } else {
-                e.target.style.backgroundColor = '#3b82f6'
-                e.target.style.color = 'white'
-              }
-            }}
           >
             <FiClock size={16} />
             Requests
