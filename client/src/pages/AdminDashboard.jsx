@@ -190,6 +190,41 @@ const AdminDashboard = () => {
             box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
             transform: scale(1.02);
           }
+          
+          .action-button {
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          }
+          
+          .action-button:hover {
+            transform: translateY(-1px);
+          }
+          
+          .action-button.primary {
+            background-color: #3b82f6;
+            color: white;
+          }
+          
+          .action-button.primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          }
+          
+          .action-button.success {
+            background-color: #10b981;
+            color: white;
+          }
+          
+          .action-button.success:hover {
+            background-color: #059669;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+          }
         `}
       </style>
       <div style={{
@@ -794,70 +829,32 @@ const AdminDashboard = () => {
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
+                className="action-button success"
                 style={{
-                  backgroundColor: '#10b981',
-                  color: 'white',
                   padding: '10px 16px',
                   borderRadius: '8px',
-                  border: 'none',
                   fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                   whiteSpace: 'nowrap'
                 }}
                 onClick={() => {
                   refetchUsers()
                   toast.success('Users data refreshed successfully')
                 }}
-                onMouseOver={(e) => {
-                  e.target.style.backgroundColor = '#059669'
-                  e.target.style.transform = 'translateY(-1px)'
-                  e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.backgroundColor = '#10b981'
-                  e.target.style.transform = 'translateY(0)'
-                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                }}
               >
                 <FiRefreshCw size={16} />
                 Refresh
               </button>
               <button 
+                className="action-button primary"
                 style={{
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
                   padding: '12px 20px',
                   borderRadius: '8px',
-                  border: 'none',
                   fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                   lineHeight: '1',
                   height: 'auto'
                 }}
                 onClick={() => setShowAddUser(true)}
-                onMouseOver={(e) => {
-                  e.target.style.backgroundColor = '#2563eb'
-                  e.target.style.transform = 'translateY(-1px)'
-                  e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)'
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.backgroundColor = '#3b82f6'
-                  e.target.style.transform = 'translateY(0)'
-                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                }}
               >
                 <FiPlus size={16} style={{ display: 'flex', alignItems: 'center' }} />
                 <span style={{ display: 'flex', alignItems: 'center' }}>Add User</span>
@@ -1004,100 +1001,43 @@ const AdminDashboard = () => {
             </div>
             <div className="d-flex gap-2">
               <button
+                className="action-button success"
                 style={{
-                  backgroundColor: '#10b981',
-                  color: 'white',
                   padding: '10px 16px',
                   borderRadius: '8px',
-                  border: 'none',
                   fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                   whiteSpace: 'nowrap'
                 }}
                 onClick={() => {
                   refetchRecords()
                   toast.success('Records data refreshed successfully')
                 }}
-                onMouseOver={(e) => {
-                  e.target.style.backgroundColor = '#059669'
-                  e.target.style.transform = 'translateY(-1px)'
-                  e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.backgroundColor = '#10b981'
-                  e.target.style.transform = 'translateY(0)'
-                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                }}
               >
                 <FiRefreshCw size={16} />
                 Refresh
               </button>
               <button 
+                className="action-button primary"
                 style={{
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
                   padding: '12px 20px',
                   borderRadius: '8px',
-                  border: 'none',
                   fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                   whiteSpace: 'nowrap'
                 }}
                 onClick={() => setShowAddRecord(true)}
-                onMouseOver={(e) => {
-                  e.target.style.backgroundColor = '#2563eb'
-                  e.target.style.transform = 'translateY(-1px)'
-                  e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)'
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.backgroundColor = '#3b82f6'
-                  e.target.style.transform = 'translateY(0)'
-                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                }}
               >
                 <FiPlus size={18} />
                 Add Record
               </button>
               <button 
+                className="action-button success"
                 style={{
-                  backgroundColor: '#10b981',
-                  color: 'white',
                   padding: '12px 20px',
                   borderRadius: '8px',
-                  border: 'none',
                   fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                   whiteSpace: 'nowrap'
                 }}
                 onClick={() => setShowImportModal(true)}
-                onMouseOver={(e) => {
-                  e.target.style.backgroundColor = '#059669'
-                  e.target.style.transform = 'translateY(-1px)'
-                  e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.backgroundColor = '#10b981'
-                  e.target.style.transform = 'translateY(0)'
-                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                }}
               >
                 <FiUpload size={18} />
                 Import Excel
