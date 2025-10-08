@@ -8,17 +8,18 @@ import { useAuth } from '../contexts/AuthContext'
 
 const UserDashboard = () => {
   const { user } = useAuth()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('')
-  const [categories, setCategories] = useState([])
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [recordToReturn, setRecordToReturn] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [recordsPerPage, setRecordsPerPage] = useState(10)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
 
   // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm)
+      setCurrentPage(1) // Reset to first page when searching
     }, 500) // 500ms delay
 
     return () => clearTimeout(timer)
@@ -26,8 +27,17 @@ const UserDashboard = () => {
 
   // Fetch records
   const { data: recordsData, isLoading: recordsLoading, refetch: refetchRecords } = useQuery(
-    ['records', debouncedSearchTerm, categoryFilter],
-    () => axios.get(`/api/user/records?search=${debouncedSearchTerm}&category=${categoryFilter}`),
+    ['records', debouncedSearchTerm, currentPage, recordsPerPage],
+    () => {
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: recordsPerPage
+      });
+      if (debouncedSearchTerm.trim()) {
+        params.append('search', debouncedSearchTerm.trim());
+      }
+      return axios.get(`/api/user/records?${params.toString()}`);
+    },
     {
       select: (data) => data.data
     }
@@ -60,12 +70,6 @@ const UserDashboard = () => {
     }
   )
 
-  // Fetch categories
-  useEffect(() => {
-    axios.get('/api/records/categories')
-      .then(res => setCategories(res.data))
-      .catch(err => console.error(err))
-  }, [])
 
   const handleRequestRecord = async (recordId) => {
     try {
@@ -125,6 +129,12 @@ const UserDashboard = () => {
         return <span className="badge badge-success">Approved</span>
       case 'rejected':
         return <span className="badge badge-danger">Rejected</span>
+      case 'handed_over':
+        return <span className="badge badge-info">Handed Over</span>
+      case 'searching':
+        return <span className="badge badge-primary">Searching</span>
+      case 'not_traceable':
+        return <span className="badge badge-secondary">Not Traceable</span>
       default:
         return <span className="badge badge-info">{status}</span>
     }
@@ -160,54 +170,244 @@ const UserDashboard = () => {
         </p>
       </div>
       
-      {/* Search and Filter */}
+      {/* Available Records */}
       <div className="card mb-4">
-        <div className="d-flex gap-3 align-items-center">
-          <div className="form-group" style={{ flex: 1 }}>
+        <div className="card-header" style={{
+          backgroundColor: '#f8fafc',
+          borderBottom: '1px solid #e5e7eb',
+          padding: '20px 24px'
+        }}>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: '#1f2937',
+            margin: '0 0 4px 0',
+            letterSpacing: '-0.025em'
+          }}>
+            Available Records
+          </h3>
+          <p style={{
+            fontSize: '14px',
+            color: '#6b7280',
+            margin: '0',
+            fontWeight: '400'
+          }}>
+            Browse and request records from the library
+          </p>
+          </div>
+        
+        {/* Search Bar */}
+        <div className="search-container" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          marginBottom: '24px',
+          padding: '20px 0'
+        }}>
+          <div className="search-input-container" style={{ 
+            position: 'relative', 
+            flex: '1', 
+            maxWidth: '500px' 
+          }}>
             <input
               type="text"
-              className="form-control"
-              placeholder="Search records..."
+              placeholder="Search by Account Number, Name, or PPO ID..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="search-input"
+              style={{
+                width: '100%',
+                padding: '12px 16px 12px 44px',
+                border: '2px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                outline: 'none',
+                transition: 'all 0.3s ease',
+                backgroundColor: '#f9fafb',
+                color: '#374151'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3b82f6';
+                e.target.style.backgroundColor = 'white';
+                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.backgroundColor = '#f9fafb';
+                e.target.style.boxShadow = 'none';
+              }}
             />
+            <div style={{
+              position: 'absolute',
+              left: '16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#6b7280',
+              fontSize: '18px'
+            }}>
+              🔍
+            </div>
           </div>
-          <div className="form-group">
-            <select
-              className="form-control"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+          
+          {searchTerm && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setCurrentPage(1);
+              }}
+              className="search-clear-button"
+              style={{
+                padding: '12px 20px',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.backgroundColor = '#dc2626';
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.backgroundColor = '#ef4444';
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.2)';
+              }}
             >
-              <option value="">All Categories</option>
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+              <FiX size={16} />
+              Clear
+            </button>
+          )}
           </div>
+        
+        {recordsData?.records?.length > 0 ? (
+          <div className="table-responsive">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>PPO ID</th>
+                  <th>Branch Code</th>
+                  <th>File ID</th>
+                  <th>Account Number</th>
+                  <th>Pension Status</th>
+                  <th>Mobile</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recordsData.records.map(record => (
+                  <tr key={record._id}>
+                    <td>{record.name || record.title}</td>
+                    <td>{record.category}</td>
+                    <td>{record.ppoUniqueId || 'N/A'}</td>
+                    <td>{record.branchCode || 'N/A'}</td>
+                    <td>{record.fileId || 'N/A'}</td>
+                    <td>{record.employeeId || 'N/A'}</td>
+                    <td>
+                      <span className={`badge ${
+                        record.pensionStatus === 'A' ? 'badge-success' : 
+                        record.pensionStatus === 'D' ? 'badge-danger' : 
+                        record.pensionStatus === 'S' ? 'badge-warning' : 
+                        'badge-secondary'
+                      }`}>
+                        {record.pensionStatus === 'A' ? 'Active' : 
+                         record.pensionStatus === 'D' ? 'Discontinued' : 
+                         record.pensionStatus === 'S' ? 'Suspended' : 
+                         record.pensionStatus || 'N/A'}
+                      </span>
+                    </td>
+                    <td>{record.mobileNumber || 'N/A'}</td>
+                    <td>
+                      {record.status === 'borrowed' && record.currentHolder ? (
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '6px',
+                          alignItems: 'flex-start'
+                        }}>
+                          <span className="badge badge-warning" style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                          }}>
+                            Borrowed
+                          </span>
+                          <div style={{ 
+                            fontSize: '12px', 
+                            color: '#4b5563', 
+                            fontWeight: '500',
+                            backgroundColor: '#f9fafb',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            border: '1px solid #e5e7eb',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}>
+                            <span style={{ 
+                              width: '6px', 
+                              height: '6px', 
+                              backgroundColor: '#10b981', 
+                              borderRadius: '50%',
+                              display: 'inline-block'
+                            }}></span>
+                            {record.currentHolder.name}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className={`badge ${record.status === 'available' ? 'badge-success' : 'badge-warning'}`} style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                        }}>
+                          {record.status}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {record.currentHolder && record.currentHolder._id === user?._id ? (
+                        <span className="text-muted">You have this record</span>
+                      ) : (
           <button
             style={{
               backgroundColor: '#3b82f6',
               color: 'white',
-              padding: '10px 16px',
-              borderRadius: '8px',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
               border: 'none',
-              fontSize: '14px',
+                            fontSize: '12px',
               fontWeight: '500',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-              whiteSpace: 'nowrap'
-            }}
-            onClick={() => {
-              refetchRecords()
-              refetchMyRecords()
-              refetchRequests()
-              refetchRequestsToMe()
-              toast.success('Data refreshed successfully')
-            }}
+                            gap: '4px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                          }}
+                          onClick={() => handleRequestRecord(record._id)}
             onMouseOver={(e) => {
               e.target.style.backgroundColor = '#2563eb'
               e.target.style.transform = 'translateY(-1px)'
@@ -219,10 +419,173 @@ const UserDashboard = () => {
               e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
             }}
           >
-            <FiRefreshCw size={16} />
-            Refresh
+                          <FiPlus size={14} />
+                          Request
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-center">No records found</p>
+        )}
+        
+        {/* Pagination Controls for Available Records */}
+        {recordsData?.totalPages > 1 && (
+          <div className="pagination-container" style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '24px',
+            padding: '16px 20px',
+            backgroundColor: '#f9fafb',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb'
+          }}>
+            {/* Records per page selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <label style={{ 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#374151' 
+              }}>
+                Records per page:
+              </label>
+              <select
+                value={recordsPerPage}
+                onChange={(e) => {
+                  setRecordsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  backgroundColor: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            {/* Pagination info */}
+            <div style={{ 
+              fontSize: '14px', 
+              color: '#6b7280',
+              fontWeight: '500'
+            }}>
+              Showing {((currentPage - 1) * recordsPerPage) + 1} to {Math.min(currentPage * recordsPerPage, recordsData?.total || 0)} of {recordsData?.total || 0} records
+            </div>
+
+            {/* Pagination buttons */}
+            <div className="pagination-buttons" style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  backgroundColor: currentPage === 1 ? '#f3f4f6' : 'white',
+                  color: currentPage === 1 ? '#9ca3af' : '#374151',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                First
+              </button>
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  backgroundColor: currentPage === 1 ? '#f3f4f6' : 'white',
+                  color: currentPage === 1 ? '#9ca3af' : '#374151',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Previous
+              </button>
+              
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, recordsData?.totalPages || 0) }, (_, i) => {
+                const startPage = Math.max(1, currentPage - 2);
+                const pageNum = startPage + i;
+                if (pageNum > (recordsData?.totalPages || 0)) return null;
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: currentPage === pageNum ? '#3b82f6' : 'white',
+                      color: currentPage === pageNum ? 'white' : '#374151',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === recordsData?.totalPages}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  backgroundColor: currentPage === recordsData?.totalPages ? '#f3f4f6' : 'white',
+                  color: currentPage === recordsData?.totalPages ? '#9ca3af' : '#374151',
+                  cursor: currentPage === recordsData?.totalPages ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setCurrentPage(recordsData?.totalPages || 1)}
+                disabled={currentPage === recordsData?.totalPages}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  backgroundColor: currentPage === recordsData?.totalPages ? '#f3f4f6' : 'white',
+                  color: currentPage === recordsData?.totalPages ? '#9ca3af' : '#374151',
+                  cursor: currentPage === recordsData?.totalPages ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Last
           </button>
         </div>
+          </div>
+        )}
       </div>
 
       {/* My Records */}
@@ -255,8 +618,12 @@ const UserDashboard = () => {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Title</th>
+                  <th>Name</th>
                   <th>Category</th>
+                  <th>PPO ID</th>
+                  <th>Branch Code</th>
+                  <th>Account Number</th>
+                  <th>Pension Status</th>
                   <th>Borrowed Date</th>
                   <th>Actions</th>
                 </tr>
@@ -264,8 +631,24 @@ const UserDashboard = () => {
               <tbody>
                 {myRecordsData.map(record => (
                   <tr key={record._id}>
-                    <td>{record.title}</td>
+                    <td>{record.name || record.title}</td>
                     <td>{record.category}</td>
+                    <td>{record.ppoUniqueId || 'N/A'}</td>
+                    <td>{record.branchCode || 'N/A'}</td>
+                    <td>{record.employeeId || 'N/A'}</td>
+                    <td>
+                      <span className={`badge ${
+                        record.pensionStatus === 'A' ? 'badge-success' : 
+                        record.pensionStatus === 'D' ? 'badge-danger' : 
+                        record.pensionStatus === 'S' ? 'badge-warning' : 
+                        'badge-secondary'
+                      }`}>
+                        {record.pensionStatus === 'A' ? 'Active' : 
+                         record.pensionStatus === 'D' ? 'Discontinued' : 
+                         record.pensionStatus === 'S' ? 'Suspended' : 
+                         record.pensionStatus || 'N/A'}
+                      </span>
+                    </td>
                     <td>{new Date(record.borrowedDate).toLocaleDateString()}</td>
                     <td>
                       <button
@@ -485,101 +868,6 @@ const UserDashboard = () => {
         )}
       </div>
 
-      {/* Available Records */}
-      <div className="card">
-        <div className="card-header" style={{
-          backgroundColor: '#f8fafc',
-          borderBottom: '1px solid #e5e7eb',
-          padding: '20px 24px'
-        }}>
-          <h3 style={{
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#1f2937',
-            margin: '0 0 4px 0',
-            letterSpacing: '-0.025em'
-          }}>
-            Available Records
-          </h3>
-          <p style={{
-            fontSize: '14px',
-            color: '#6b7280',
-            margin: '0',
-            fontWeight: '400'
-          }}>
-            Browse and request records from the library
-          </p>
-        </div>
-        {recordsData?.records?.length > 0 ? (
-          <div className="table-responsive">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Category</th>
-                  <th>Status</th>
-                  <th>Current Holder</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recordsData.records.map(record => (
-                  <tr key={record._id}>
-                    <td>{record.title}</td>
-                    <td>{record.category}</td>
-                    <td>
-                      <span className={`badge ${record.status === 'available' ? 'badge-success' : 'badge-warning'}`}>
-                        {record.status}
-                      </span>
-                    </td>
-                    <td>{record.currentHolder?.name || 'Available'}</td>
-                    <td>
-                      {record.currentHolder && record.currentHolder._id === user?._id ? (
-                        <span className="text-muted">You have this record</span>
-                      ) : (
-                        <button
-                          style={{
-                            backgroundColor: '#3b82f6',
-                            color: 'white',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            border: 'none',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }}
-                          onClick={() => handleRequestRecord(record._id)}
-                          onMouseOver={(e) => {
-                            e.target.style.backgroundColor = '#2563eb'
-                            e.target.style.transform = 'translateY(-1px)'
-                            e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)'
-                          }}
-                          onMouseOut={(e) => {
-                            e.target.style.backgroundColor = '#3b82f6'
-                            e.target.style.transform = 'translateY(0)'
-                            e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }}
-                        >
-                          <FiPlus size={14} />
-                          Request
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-center">No records found</p>
-        )}
-      </div>
-
       {/* Return Confirmation Modal */}
       <SimpleModal
         isOpen={showReturnModal}
@@ -677,6 +965,85 @@ const UserDashboard = () => {
           </div>
         )}
       </SimpleModal>
+      
+      <style jsx>{`
+        /* Badge Styles */
+        .badge {
+          display: inline-block;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .badge-success {
+          background: #d1fae5;
+          color: #065f46;
+        }
+        .badge-warning {
+          background: #fef3c7;
+          color: #92400e;
+        }
+        .badge-danger {
+          background: #fee2e2;
+          color: #991b1b;
+        }
+        .badge-info {
+          background: #dbeafe;
+          color: #1e40af;
+        }
+        .badge-secondary {
+          background: #f3f4f6;
+          color: #374151;
+        }
+        .badge-primary {
+          background: #dbeafe;
+          color: #1e40af;
+        }
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+          .search-container {
+            flex-direction: column !important;
+            gap: 16px !important;
+            padding: 16px 0 !important;
+            margin-bottom: 20px !important;
+          }
+          
+          .search-input-container {
+            max-width: 100% !important;
+          }
+          
+          .search-input {
+            font-size: 16px !important;
+            padding: 14px 16px 14px 48px !important;
+            border-radius: 10px !important;
+          }
+          
+          .search-clear-button {
+            width: 100% !important;
+            padding: 14px 20px !important;
+            font-size: 16px !important;
+            justify-content: center !important;
+          }
+          
+          .pagination-container {
+            flex-direction: column !important;
+            gap: 16px !important;
+            padding: 16px !important;
+          }
+          
+          .pagination-controls {
+            flex-direction: column !important;
+            gap: 12px !important;
+          }
+          
+          .pagination-buttons {
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }

@@ -27,7 +27,7 @@ router.post('/users', adminAuth, [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Please include a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('role').isIn(['admin', 'user']).withMessage('Role must be admin or user')
+  body('role').isIn(['admin', 'recordManager', 'user']).withMessage('Role must be admin, recordManager, or user')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -119,74 +119,6 @@ router.delete('/users/:id', adminAuth, async (req, res) => {
     }
 
     res.json({ message: 'User deleted successfully' });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// @route   GET /api/admin/requests
-// @desc    Get all requests
-// @access  Private (Admin)
-router.get('/requests', adminAuth, async (req, res) => {
-  try {
-    const requests = await Request.find()
-      .populate('user', 'name email')
-      .populate('record', 'title category status')
-      .populate('processedBy', 'name')
-      .sort({ createdAt: -1 });
-    
-    res.json(requests);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// @route   PUT /api/admin/requests/:id
-// @desc    Approve or reject request
-// @access  Private (Admin)
-router.put('/requests/:id', adminAuth, [
-  body('status').isIn(['approved', 'rejected']).withMessage('Status must be approved or rejected'),
-  body('adminResponse').optional().isString()
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { status, adminResponse } = req.body;
-
-    const request = await Request.findById(req.params.id)
-      .populate('user', 'name email')
-      .populate('record', 'title status currentHolder');
-
-    if (!request) {
-      return res.status(404).json({ message: 'Request not found' });
-    }
-
-    if (request.status !== 'pending') {
-      return res.status(400).json({ message: 'Request has already been processed' });
-    }
-
-    // Update request
-    request.status = status;
-    request.adminResponse = adminResponse;
-    request.processedBy = req.user._id;
-    request.processedAt = new Date();
-
-    if (status === 'approved') {
-      // Update record status
-      request.record.status = 'borrowed';
-      request.record.currentHolder = request.user._id;
-      request.record.borrowedDate = new Date();
-      await request.record.save();
-    }
-
-    await request.save();
-
-    res.json(request);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });

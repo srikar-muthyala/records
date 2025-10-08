@@ -36,4 +36,32 @@ const adminAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { auth, adminAuth };
+const recordManagerAuth = async (req, res, next) => {
+  try {
+    await auth(req, res, () => {
+      if (req.user.role !== 'recordManager' && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied. Record Manager privileges required.' });
+      }
+      next();
+    });
+  } catch (error) {
+    res.status(401).json({ message: 'Token is not valid' });
+  }
+};
+
+const requireRole = (roles) => {
+  return async (req, res, next) => {
+    try {
+      await auth(req, res, () => {
+        if (!roles.includes(req.user.role)) {
+          return res.status(403).json({ message: 'Access denied. Insufficient privileges.' });
+        }
+        next();
+      });
+    } catch (error) {
+      res.status(401).json({ message: 'Token is not valid' });
+    }
+  };
+};
+
+module.exports = { auth, adminAuth, recordManagerAuth, requireRole };

@@ -13,15 +13,34 @@ router.get('/records', auth, async (req, res) => {
   try {
     const { page = 1, limit = 10, search = '', category = '' } = req.query;
     
+    console.log('User records search - search term:', search);
+    console.log('User records search - page:', page, 'limit:', limit);
+    
     const query = {};
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
+      // Use text search for better performance on title, description, name
+      const textSearch = { $text: { $search: search } };
+      
+      // Use exact matches for IDs to avoid regex performance issues
+      const exactMatches = {
+        $or: [
+          { employeeId: search },
+          { ppoUniqueId: search }
+        ]
+      };
+      
+      // Combine text search with exact matches
+      query.$or = [textSearch, exactMatches];
     }
     if (category) {
       query.category = category;
+    }
+    
+    console.log('User records search - query:', JSON.stringify(query, null, 2));
+
+    // Add status filter to reduce scanned documents
+    if (!query.status) {
+      query.status = { $in: ['available', 'borrowed'] };
     }
 
     const records = await Record.find(query)
@@ -31,6 +50,9 @@ router.get('/records', auth, async (req, res) => {
       .skip((page - 1) * limit);
 
     const total = await Record.countDocuments(query);
+    
+    console.log('User records search - found records:', records.length);
+    console.log('User records search - total:', total);
 
     res.json({
       records,
@@ -41,6 +63,58 @@ router.get('/records', auth, async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET /api/user/records/debug-search
+// @desc    Debug search functionality
+// @access  Private
+router.get('/records/debug-search', auth, async (req, res) => {
+  try {
+    const { search = '' } = req.query;
+    
+    console.log('Debug search - search term:', search);
+    
+    const query = {};
+    if (search) {
+      // Use text search for better performance on title, description, name
+      const textSearch = { $text: { $search: search } };
+      
+      // Use exact matches for IDs to avoid regex performance issues
+      const exactMatches = {
+        $or: [
+          { employeeId: search },
+          { ppoUniqueId: search }
+        ]
+      };
+      
+      // Combine text search with exact matches
+      query.$or = [textSearch, exactMatches];
+    }
+    
+    console.log('Debug search - query:', JSON.stringify(query, null, 2));
+    
+    const records = await Record.find(query).limit(5);
+    const total = await Record.countDocuments(query);
+    
+    console.log('Debug search - found records:', records.length);
+    console.log('Debug search - total:', total);
+    
+    res.json({
+      searchTerm: search,
+      query,
+      records: records.map(r => ({
+        _id: r._id,
+        title: r.title,
+        name: r.name,
+        employeeId: r.employeeId,
+        ppoUniqueId: r.ppoUniqueId
+      })),
+      total
+    });
+  } catch (error) {
+    console.error('Debug search error:', error);
+    res.status(500).json({ message: 'Debug search error', error: error.message });
   }
 });
 
@@ -157,8 +231,12 @@ router.get('/my-requests', auth, async (req, res) => {
 // @access  Private
 router.get('/my-records', auth, async (req, res) => {
   try {
+    console.log('Fetching my-records for user:', req.user._id);
     const records = await Record.find({ currentHolder: req.user._id })
       .sort({ borrowedDate: -1 });
+    
+    console.log('Found records for user:', records.length);
+    console.log('Records:', records.map(r => ({ id: r._id, title: r.title, status: r.status, currentHolder: r.currentHolder })));
 
     res.json(records);
   } catch (error) {
