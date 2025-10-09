@@ -7,18 +7,32 @@ require('dotenv').config();
 const app = express();
 
 // Middleware
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('CORS_ORIGIN:', process.env.CORS_ORIGIN);
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://recmanage.netlify.app'] 
-    : ['http://localhost:3000', 'http://localhost:5173'],
+  origin: function (origin, callback) {
+    console.log('CORS request from origin:', origin);
+    console.log('NODE_ENV is production:', process.env.NODE_ENV === 'production');
+    
+    // Allow all origins for now to debug
+    callback(null, true);
+  },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} from origin: ${req.headers.origin}`);
+  next();
+});
 
 // CORS test endpoint
 app.get('/api/cors-test', (req, res) => {
