@@ -11,7 +11,13 @@ const router = express.Router();
 // @access  Private (Record Manager)
 router.get('/requests', recordManagerAuth, async (req, res) => {
   try {
-    const requests = await Request.find()
+    // Only show requests that are meant for record managers (no targetUser or targetUser is null)
+    const requests = await Request.find({ 
+      $or: [
+        { targetUser: null },
+        { targetUser: { $exists: false } }
+      ]
+    })
       .populate('user', 'name email')
       .populate('record', 'title category status fileId')
       .populate('processedBy', 'name')
@@ -89,10 +95,27 @@ router.put('/requests/:id', recordManagerAuth, [
 // @access  Private (Record Manager)
 router.get('/dashboard', recordManagerAuth, async (req, res) => {
   try {
-    const totalRequests = await Request.countDocuments();
-    const pendingRequests = await Request.countDocuments({ status: 'pending' });
-    const approvedRequests = await Request.countDocuments({ status: 'approved' });
-    const rejectedRequests = await Request.countDocuments({ status: 'rejected' });
+    // Only count requests meant for record managers
+    const recordManagerRequestFilter = {
+      $or: [
+        { targetUser: null },
+        { targetUser: { $exists: false } }
+      ]
+    };
+
+    const totalRequests = await Request.countDocuments(recordManagerRequestFilter);
+    const pendingRequests = await Request.countDocuments({ 
+      ...recordManagerRequestFilter,
+      status: 'pending' 
+    });
+    const approvedRequests = await Request.countDocuments({ 
+      ...recordManagerRequestFilter,
+      status: 'approved' 
+    });
+    const rejectedRequests = await Request.countDocuments({ 
+      ...recordManagerRequestFilter,
+      status: 'rejected' 
+    });
 
     res.json({
       totalRequests,

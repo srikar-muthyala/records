@@ -134,9 +134,23 @@ router.get('/dashboard', adminAuth, async (req, res) => {
     const totalRecords = await Record.countDocuments();
     const availableRecords = await Record.countDocuments({ status: 'available' });
     const borrowedRecords = await Record.countDocuments({ status: 'borrowed' });
-    const pendingRequests = await Request.countDocuments({ status: 'pending' });
+    // Only count requests meant for record managers/admins
+    const recordManagerRequestFilter = {
+      $or: [
+        { targetUser: null },
+        { targetUser: { $exists: false } }
+      ]
+    };
 
-    const recentRequests = await Request.find({ status: 'pending' })
+    const pendingRequests = await Request.countDocuments({ 
+      ...recordManagerRequestFilter,
+      status: 'pending' 
+    });
+
+    const recentRequests = await Request.find({ 
+      ...recordManagerRequestFilter,
+      status: 'pending' 
+    })
       .populate('user', 'name email')
       .populate('record', 'title category')
       .sort({ createdAt: -1 })

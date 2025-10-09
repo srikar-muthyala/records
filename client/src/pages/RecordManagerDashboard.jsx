@@ -16,6 +16,10 @@ const RecordManagerDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState('')
+  
+  // Pagination for Record Requests
+  const [requestsCurrentPage, setRequestsCurrentPage] = useState(1)
+  const [requestsPerPage, setRequestsPerPage] = useState(10)
 
   // Handle search
   const handleSearch = () => {
@@ -1119,18 +1123,29 @@ padding: 8px 12px;
                     <th>Category</th>
                     <th>File ID</th>
                     <th>Request Date</th>
+                    <th>Message</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {requestsData?.map(request => (
+                  {requestsData
+                    ?.slice((requestsCurrentPage - 1) * requestsPerPage, requestsCurrentPage * requestsPerPage)
+                    ?.map(request => (
                     <tr key={request._id}>
                       <td>{request.user?.name}</td>
                       <td>{request.record?.title}</td>
                       <td>{request.record?.category}</td>
                       <td>{request.record?.fileId || 'N/A'}</td>
                       <td>{new Date(request.createdAt).toLocaleDateString()}</td>
+                      <td style={{ 
+                        maxWidth: '200px', 
+                        wordWrap: 'break-word',
+                        fontSize: '13px',
+                        color: '#374151'
+                      }}>
+                        {request.message || '-'}
+                      </td>
                       <td>{getStatusBadge(request.status)}</td>
                       <td>
                         <div className="action-buttons" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1162,7 +1177,9 @@ padding: 8px 12px;
 
             {/* Mobile Card View for Requests */}
             <div className="mobile-card-view" style={{ display: 'none' }}>
-              {requestsData?.map(request => (
+              {requestsData
+                ?.slice((requestsCurrentPage - 1) * requestsPerPage, requestsCurrentPage * requestsPerPage)
+                ?.map(request => (
                 <div key={request._id} className="mobile-card">
                   <div className="mobile-card-header">
                     <h4 className="mobile-card-title">{request.record?.title}</h4>
@@ -1187,6 +1204,16 @@ padding: 8px 12px;
                     <div className="mobile-card-detail">
                       <div className="mobile-card-label">Request Date</div>
                       <div className="mobile-card-value">{new Date(request.createdAt).toLocaleDateString()}</div>
+                    </div>
+                    <div className="mobile-card-detail" style={{ gridColumn: '1 / -1' }}>
+                      <div className="mobile-card-label">Message</div>
+                      <div className="mobile-card-value" style={{ 
+                        fontSize: '12px',
+                        color: '#6b7280',
+                        fontStyle: request.message ? 'normal' : 'italic'
+                      }}>
+                        {request.message || 'No message provided'}
+                      </div>
                     </div>
                   </div>
                   
@@ -1215,6 +1242,161 @@ padding: 8px 12px;
                 </div>
               ))}
             </div>
+
+            {/* Pagination for Record Requests */}
+            {requestsData?.length > 0 && (
+              <div className="pagination-container" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '24px',
+                padding: '16px 20px',
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
+              }}>
+                {/* Records per page selector */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ 
+                    fontSize: '14px', 
+                    fontWeight: '500', 
+                    color: '#374151' 
+                  }}>
+                    Records per page:
+                  </label>
+                  <select
+                    value={requestsPerPage}
+                    onChange={(e) => {
+                      setRequestsPerPage(Number(e.target.value));
+                      setRequestsCurrentPage(1);
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      backgroundColor: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                {/* Pagination info */}
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}>
+                  Showing {((requestsCurrentPage - 1) * requestsPerPage) + 1} to {Math.min(requestsCurrentPage * requestsPerPage, requestsData?.length || 0)} of {requestsData?.length || 0} records
+                </div>
+
+                {/* Pagination buttons */}
+                <div className="pagination-buttons" style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setRequestsCurrentPage(1)}
+                    disabled={requestsCurrentPage === 1}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: requestsCurrentPage === 1 ? '#f3f4f6' : 'white',
+                      color: requestsCurrentPage === 1 ? '#9ca3af' : '#374151',
+                      cursor: requestsCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => setRequestsCurrentPage(requestsCurrentPage - 1)}
+                    disabled={requestsCurrentPage === 1}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: requestsCurrentPage === 1 ? '#f3f4f6' : 'white',
+                      color: requestsCurrentPage === 1 ? '#9ca3af' : '#374151',
+                      cursor: requestsCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page numbers */}
+                  {Array.from({ length: Math.min(5, Math.ceil(requestsData?.length / requestsPerPage) || 0) }, (_, i) => {
+                    const startPage = Math.max(1, requestsCurrentPage - 2);
+                    const pageNum = startPage + i;
+                    const totalPages = Math.ceil(requestsData?.length / requestsPerPage) || 0;
+                    if (pageNum > totalPages) return null;
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setRequestsCurrentPage(pageNum)}
+                        style={{
+                          padding: '8px 12px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          backgroundColor: requestsCurrentPage === pageNum ? '#3b82f6' : 'white',
+                          color: requestsCurrentPage === pageNum ? 'white' : '#374151',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  <button
+                    onClick={() => setRequestsCurrentPage(requestsCurrentPage + 1)}
+                    disabled={requestsCurrentPage >= Math.ceil(requestsData?.length / requestsPerPage)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: requestsCurrentPage >= Math.ceil(requestsData?.length / requestsPerPage) ? '#f3f4f6' : 'white',
+                      color: requestsCurrentPage >= Math.ceil(requestsData?.length / requestsPerPage) ? '#9ca3af' : '#374151',
+                      cursor: requestsCurrentPage >= Math.ceil(requestsData?.length / requestsPerPage) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => setRequestsCurrentPage(Math.ceil(requestsData?.length / requestsPerPage))}
+                    disabled={requestsCurrentPage >= Math.ceil(requestsData?.length / requestsPerPage)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: requestsCurrentPage >= Math.ceil(requestsData?.length / requestsPerPage) ? '#f3f4f6' : 'white',
+                      color: requestsCurrentPage >= Math.ceil(requestsData?.length / requestsPerPage) ? '#9ca3af' : '#374151',
+                      cursor: requestsCurrentPage >= Math.ceil(requestsData?.length / requestsPerPage) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Last
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

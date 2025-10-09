@@ -10,6 +10,9 @@ const UserDashboard = () => {
   const { user } = useAuth()
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [recordToReturn, setRecordToReturn] = useState(null)
+  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [recordToRequest, setRecordToRequest] = useState(null)
+  const [requestMessage, setRequestMessage] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [recordsPerPage, setRecordsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
@@ -82,10 +85,22 @@ const UserDashboard = () => {
   )
 
 
-  const handleRequestRecord = async (recordId) => {
+  const handleRequestRecord = (record) => {
+    setRecordToRequest(record)
+    setRequestMessage('')
+    setShowRequestModal(true)
+  }
+
+  const confirmRequestRecord = async () => {
     try {
-      await axios.post('/api/user/requests', { recordId })
+      await axios.post('/api/user/requests', { 
+        recordId: recordToRequest._id,
+        message: requestMessage.trim() || undefined
+      })
       toast.success('Request submitted successfully')
+      setShowRequestModal(false)
+      setRecordToRequest(null)
+      setRequestMessage('')
       refetchRequests()
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to submit request')
@@ -436,7 +451,7 @@ const UserDashboard = () => {
                             gap: '4px',
                             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                           }}
-                          onClick={() => handleRequestRecord(record._id)}
+                          onClick={() => handleRequestRecord(record)}
             onMouseOver={(e) => {
               e.target.style.backgroundColor = '#2563eb'
               e.target.style.transform = 'translateY(-1px)'
@@ -543,7 +558,7 @@ const UserDashboard = () => {
                       className="btn btn-primary btn-sm"
                       onClick={() => {
                         console.log('Mobile card request button clicked for record:', record._id);
-                        handleRequestRecord(record._id);
+                        handleRequestRecord(record);
                       }}
                       style={{ 
                         fontSize: '12px', 
@@ -1548,6 +1563,149 @@ const UserDashboard = () => {
                 onClick={() => {
                   setShowReturnModal(false)
                   setRecordToReturn(null)
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.backgroundColor = '#4b5563'
+                  e.target.style.transform = 'translateY(-1px)'
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.backgroundColor = '#6b7280'
+                  e.target.style.transform = 'translateY(0)'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </SimpleModal>
+
+      {/* Request Record Modal */}
+      <SimpleModal
+        isOpen={showRequestModal}
+        onClose={() => {
+          setShowRequestModal(false)
+          setRecordToRequest(null)
+          setRequestMessage('')
+        }}
+        title="Request Record"
+      >
+        {recordToRequest && (
+          <div>
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ margin: '0 0 10px 0', fontSize: '16px', color: '#374151' }}>
+                You are requesting the following record:
+              </p>
+              <div style={{ 
+                backgroundColor: '#f3f4f6', 
+                padding: '12px', 
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb',
+                marginBottom: '16px'
+              }}>
+                <p style={{ margin: '0', fontWeight: '500', color: '#1f2937' }}>
+                  <strong>Title:</strong> {recordToRequest.name || recordToRequest.title}
+                </p>
+                <p style={{ margin: '4px 0 0 0', color: '#6b7280' }}>
+                  <strong>Category:</strong> {recordToRequest.category}
+                </p>
+                {recordToRequest.ppoUniqueId && (
+                  <p style={{ margin: '4px 0 0 0', color: '#6b7280' }}>
+                    <strong>PPO ID:</strong> {recordToRequest.ppoUniqueId}
+                  </p>
+                )}
+              </div>
+              
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  color: '#374151', 
+                  marginBottom: '8px' 
+                }}>
+                  Message (Optional)
+                </label>
+                <textarea
+                  value={requestMessage}
+                  onChange={(e) => setRequestMessage(e.target.value)}
+                  placeholder="Add a message to your request..."
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    minHeight: '80px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3b82f6'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb'
+                    e.target.style.boxShadow = 'none'
+                  }}
+                />
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                style={{
+                  flex: 1,
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
+                onClick={confirmRequestRecord}
+                onMouseOver={(e) => {
+                  e.target.style.backgroundColor = '#2563eb'
+                  e.target.style.transform = 'translateY(-1px)'
+                  e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)'
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.backgroundColor = '#3b82f6'
+                  e.target.style.transform = 'translateY(0)'
+                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <FiPlus size={16} />
+                Submit Request
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
+                onClick={() => {
+                  setShowRequestModal(false)
+                  setRecordToRequest(null)
+                  setRequestMessage('')
                 }}
                 onMouseOver={(e) => {
                   e.target.style.backgroundColor = '#4b5563'
