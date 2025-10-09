@@ -8,21 +8,9 @@ const app = express();
 
 // Middleware
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? ['https://recmanage.netlify.app', 'https://recmanage.netlify.app/'] 
-      : ['http://localhost:3000', 'http://localhost:5173'];
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://recmanage.netlify.app'] 
+    : ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
