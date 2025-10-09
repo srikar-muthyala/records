@@ -14,6 +14,14 @@ const UserDashboard = () => {
   const [recordsPerPage, setRecordsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  
+  // Pagination for My Requests
+  const [myRequestsCurrentPage, setMyRequestsCurrentPage] = useState(1)
+  const [myRequestsPerPage, setMyRequestsPerPage] = useState(10)
+  
+  // Pagination for Requests to Me
+  const [requestsToMeCurrentPage, setRequestsToMeCurrentPage] = useState(1)
+  const [requestsToMePerPage, setRequestsToMePerPage] = useState(10)
 
   // Handle search
   const handleSearch = () => {
@@ -533,11 +541,27 @@ const UserDashboard = () => {
                   ) : (
                     <button
                       className="btn btn-primary btn-sm"
-                      onClick={() => handleRequestRecord(record._id)}
-                      disabled={record.status === 'borrowed'}
-                      style={{ fontSize: '12px', padding: '6px 12px' }}
+                      onClick={() => {
+                        console.log('Mobile card request button clicked for record:', record._id);
+                        handleRequestRecord(record._id);
+                      }}
+                      style={{ 
+                        fontSize: '12px', 
+                        padding: '8px 12px',
+                        width: '100%',
+                        backgroundColor: '#3b82f6',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: 'white',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px'
+                      }}
                     >
-                      <FiPlus /> Request
+                      <FiPlus size={14} />
+                      Request
                     </button>
                   )}
                 </div>
@@ -891,30 +915,220 @@ const UserDashboard = () => {
           </p>
         </div>
         {requestsData?.length > 0 ? (
-          <div className="table-responsive">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Record</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Response</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requestsData.map(request => (
-                  <tr key={request._id}>
-                    <td>{request.record?.title}</td>
-                    <td>{request.requestType}</td>
-                    <td>{getStatusBadge(request.status)}</td>
-                    <td>{new Date(request.createdAt).toLocaleDateString()}</td>
-                    <td>{request.adminResponse || '-'}</td>
+          <>
+            <div className="table-responsive">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Record</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Response</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {requestsData
+                  .slice((myRequestsCurrentPage - 1) * myRequestsPerPage, myRequestsCurrentPage * myRequestsPerPage)
+                  .map(request => (
+                    <tr key={request._id}>
+                      <td>{request.record?.title}</td>
+                      <td>{request.requestType}</td>
+                      <td>{getStatusBadge(request.status)}</td>
+                      <td>{new Date(request.createdAt).toLocaleDateString()}</td>
+                      <td>{request.adminResponse || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View for My Requests */}
+            <div className="mobile-card-view" style={{ display: 'none' }}>
+              {requestsData
+                .slice((myRequestsCurrentPage - 1) * myRequestsPerPage, myRequestsCurrentPage * myRequestsPerPage)
+                .map(request => (
+                <div key={request._id} className="mobile-card">
+                  <div className="mobile-card-header">
+                    <h4 className="mobile-card-title">{request.record?.title}</h4>
+                    <div className="mobile-card-status">
+                      {getStatusBadge(request.status)}
+                    </div>
+                  </div>
+                  
+                  <div className="mobile-card-details">
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Type</div>
+                      <div className="mobile-card-value">{request.requestType}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Date</div>
+                      <div className="mobile-card-value">{new Date(request.createdAt).toLocaleDateString()}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Response</div>
+                      <div className="mobile-card-value">{request.adminResponse || '-'}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination for My Requests */}
+            {requestsData?.length > 0 && (
+              <div className="pagination-container" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '24px',
+                padding: '16px 20px',
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
+              }}>
+                {/* Records per page selector */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ 
+                    fontSize: '14px', 
+                    fontWeight: '500', 
+                    color: '#374151' 
+                  }}>
+                    Records per page:
+                  </label>
+                  <select
+                    value={myRequestsPerPage}
+                    onChange={(e) => {
+                      setMyRequestsPerPage(Number(e.target.value));
+                      setMyRequestsCurrentPage(1);
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      backgroundColor: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                {/* Pagination info */}
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}>
+                  Showing {((myRequestsCurrentPage - 1) * myRequestsPerPage) + 1} to {Math.min(myRequestsCurrentPage * myRequestsPerPage, requestsData?.length || 0)} of {requestsData?.length || 0} records
+                </div>
+
+                {/* Pagination buttons */}
+                <div className="pagination-buttons" style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setMyRequestsCurrentPage(1)}
+                    disabled={myRequestsCurrentPage === 1}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: myRequestsCurrentPage === 1 ? '#f3f4f6' : 'white',
+                      color: myRequestsCurrentPage === 1 ? '#9ca3af' : '#374151',
+                      cursor: myRequestsCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => setMyRequestsCurrentPage(myRequestsCurrentPage - 1)}
+                    disabled={myRequestsCurrentPage === 1}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: myRequestsCurrentPage === 1 ? '#f3f4f6' : 'white',
+                      color: myRequestsCurrentPage === 1 ? '#9ca3af' : '#374151',
+                      cursor: myRequestsCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page numbers */}
+                  {Array.from({ length: Math.min(5, Math.ceil(requestsData?.length / myRequestsPerPage) || 0) }, (_, i) => {
+                    const startPage = Math.max(1, myRequestsCurrentPage - 2);
+                    const pageNum = startPage + i;
+                    const totalPages = Math.ceil(requestsData?.length / myRequestsPerPage) || 0;
+                    if (pageNum > totalPages) return null;
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setMyRequestsCurrentPage(pageNum)}
+                        style={{
+                          padding: '8px 12px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          backgroundColor: myRequestsCurrentPage === pageNum ? '#3b82f6' : 'white',
+                          color: myRequestsCurrentPage === pageNum ? 'white' : '#374151',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  <button
+                    onClick={() => setMyRequestsCurrentPage(myRequestsCurrentPage + 1)}
+                    disabled={myRequestsCurrentPage >= Math.ceil(requestsData?.length / myRequestsPerPage)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: myRequestsCurrentPage >= Math.ceil(requestsData?.length / myRequestsPerPage) ? '#f3f4f6' : 'white',
+                      color: myRequestsCurrentPage >= Math.ceil(requestsData?.length / myRequestsPerPage) ? '#9ca3af' : '#374151',
+                      cursor: myRequestsCurrentPage >= Math.ceil(requestsData?.length / myRequestsPerPage) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => setMyRequestsCurrentPage(Math.ceil(requestsData?.length / myRequestsPerPage))}
+                    disabled={myRequestsCurrentPage >= Math.ceil(requestsData?.length / myRequestsPerPage)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: myRequestsCurrentPage >= Math.ceil(requestsData?.length / myRequestsPerPage) ? '#f3f4f6' : 'white',
+                      color: myRequestsCurrentPage >= Math.ceil(requestsData?.length / myRequestsPerPage) ? '#9ca3af' : '#374151',
+                      cursor: myRequestsCurrentPage >= Math.ceil(requestsData?.length / myRequestsPerPage) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Last
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <p className="text-center">No requests submitted</p>
         )}
@@ -946,95 +1160,308 @@ const UserDashboard = () => {
           </p>
         </div>
         {requestsToMeData?.length > 0 ? (
-          <div className="table-responsive">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Record</th>
-                  <th>Message</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requestsToMeData.map(request => (
-                  <tr key={request._id}>
-                    <td>{request.user?.name}</td>
-                    <td>{request.record?.title}</td>
-                    <td>{request.message || '-'}</td>
-                    <td>{new Date(request.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          style={{
-                            backgroundColor: '#10b981',
-                            color: 'white',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            border: 'none',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }}
-                          onClick={() => handleApproveRequest(request._id)}
-                          onMouseOver={(e) => {
-                            e.target.style.backgroundColor = '#059669'
-                            e.target.style.transform = 'translateY(-1px)'
-                            e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
-                          }}
-                          onMouseOut={(e) => {
-                            e.target.style.backgroundColor = '#10b981'
-                            e.target.style.transform = 'translateY(0)'
-                            e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }}
-                        >
-                          <FiPlus size={14} />
-                          Approve
-                        </button>
-                        <button
-                          style={{
-                            backgroundColor: '#ef4444',
-                            color: 'white',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            border: 'none',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }}
-                          onClick={() => handleRejectRequest(request._id)}
-                          onMouseOver={(e) => {
-                            e.target.style.backgroundColor = '#dc2626'
-                            e.target.style.transform = 'translateY(-1px)'
-                            e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)'
-                          }}
-                          onMouseOut={(e) => {
-                            e.target.style.backgroundColor = '#ef4444'
-                            e.target.style.transform = 'translateY(0)'
-                            e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }}
-                        >
-                          <FiX size={14} />
-                          Reject
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="table-responsive">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Record</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {requestsToMeData
+                    .slice((requestsToMeCurrentPage - 1) * requestsToMePerPage, requestsToMeCurrentPage * requestsToMePerPage)
+                    .map(request => (
+                    <tr key={request._id}>
+                      <td>{request.user?.name}</td>
+                      <td>{request.record?.title}</td>
+                      <td>{request.message || '-'}</td>
+                      <td>{new Date(request.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            style={{
+                              backgroundColor: '#10b981',
+                              color: 'white',
+                              padding: '8px 12px',
+                              borderRadius: '6px',
+                              border: 'none',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                            onClick={() => handleApproveRequest(request._id)}
+                            onMouseOver={(e) => {
+                              e.target.style.backgroundColor = '#059669'
+                              e.target.style.transform = 'translateY(-1px)'
+                              e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.backgroundColor = '#10b981'
+                              e.target.style.transform = 'translateY(0)'
+                              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                          >
+                            <FiPlus size={14} />
+                            Approve
+                          </button>
+                          <button
+                            style={{
+                              backgroundColor: '#ef4444',
+                              color: 'white',
+                              padding: '8px 12px',
+                              borderRadius: '6px',
+                              border: 'none',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                            onClick={() => handleRejectRequest(request._id)}
+                            onMouseOver={(e) => {
+                              e.target.style.backgroundColor = '#dc2626'
+                              e.target.style.transform = 'translateY(-1px)'
+                              e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)'
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.backgroundColor = '#ef4444'
+                              e.target.style.transform = 'translateY(0)'
+                              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                          >
+                            <FiX size={14} />
+                            Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View for Requests to Me */}
+            <div className="mobile-card-view" style={{ display: 'none' }}>
+              {requestsToMeData
+                .slice((requestsToMeCurrentPage - 1) * requestsToMePerPage, requestsToMeCurrentPage * requestsToMePerPage)
+                .map(request => (
+                <div key={request._id} className="mobile-card">
+                  <div className="mobile-card-header">
+                    <h4 className="mobile-card-title">{request.record?.title}</h4>
+                    <div className="mobile-card-status">
+                      <span style={{ 
+                        fontSize: '12px', 
+                        color: '#6b7280', 
+                        fontWeight: '500' 
+                      }}>
+                        Request from {request.user?.name}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mobile-card-details">
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">User</div>
+                      <div className="mobile-card-value">{request.user?.name}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Date</div>
+                      <div className="mobile-card-value">{new Date(request.createdAt).toLocaleDateString()}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Message</div>
+                      <div className="mobile-card-value">{request.message || '-'}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mobile-card-actions">
+                    <button
+                      className="btn btn-success btn-sm"
+                      onClick={() => handleApproveRequest(request._id)}
+                      style={{ fontSize: '12px', padding: '6px 12px', marginRight: '8px' }}
+                    >
+                      <FiPlus /> Approve
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleRejectRequest(request._id)}
+                      style={{ fontSize: '12px', padding: '6px 12px' }}
+                    >
+                      <FiX /> Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination for Requests to Me */}
+            {requestsToMeData?.length > 0 && (
+              <div className="pagination-container" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '24px',
+                padding: '16px 20px',
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
+              }}>
+                {/* Records per page selector */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ 
+                    fontSize: '14px', 
+                    fontWeight: '500', 
+                    color: '#374151' 
+                  }}>
+                    Records per page:
+                  </label>
+                  <select
+                    value={requestsToMePerPage}
+                    onChange={(e) => {
+                      setRequestsToMePerPage(Number(e.target.value));
+                      setRequestsToMeCurrentPage(1);
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      backgroundColor: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                {/* Pagination info */}
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}>
+                  Showing {((requestsToMeCurrentPage - 1) * requestsToMePerPage) + 1} to {Math.min(requestsToMeCurrentPage * requestsToMePerPage, requestsToMeData?.length || 0)} of {requestsToMeData?.length || 0} records
+                </div>
+
+                {/* Pagination buttons */}
+                <div className="pagination-buttons" style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setRequestsToMeCurrentPage(1)}
+                    disabled={requestsToMeCurrentPage === 1}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: requestsToMeCurrentPage === 1 ? '#f3f4f6' : 'white',
+                      color: requestsToMeCurrentPage === 1 ? '#9ca3af' : '#374151',
+                      cursor: requestsToMeCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => setRequestsToMeCurrentPage(requestsToMeCurrentPage - 1)}
+                    disabled={requestsToMeCurrentPage === 1}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: requestsToMeCurrentPage === 1 ? '#f3f4f6' : 'white',
+                      color: requestsToMeCurrentPage === 1 ? '#9ca3af' : '#374151',
+                      cursor: requestsToMeCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page numbers */}
+                  {Array.from({ length: Math.min(5, Math.ceil(requestsToMeData?.length / requestsToMePerPage) || 0) }, (_, i) => {
+                    const startPage = Math.max(1, requestsToMeCurrentPage - 2);
+                    const pageNum = startPage + i;
+                    const totalPages = Math.ceil(requestsToMeData?.length / requestsToMePerPage) || 0;
+                    if (pageNum > totalPages) return null;
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setRequestsToMeCurrentPage(pageNum)}
+                        style={{
+                          padding: '8px 12px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          backgroundColor: requestsToMeCurrentPage === pageNum ? '#3b82f6' : 'white',
+                          color: requestsToMeCurrentPage === pageNum ? 'white' : '#374151',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  <button
+                    onClick={() => setRequestsToMeCurrentPage(requestsToMeCurrentPage + 1)}
+                    disabled={requestsToMeCurrentPage >= Math.ceil(requestsToMeData?.length / requestsToMePerPage)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: requestsToMeCurrentPage >= Math.ceil(requestsToMeData?.length / requestsToMePerPage) ? '#f3f4f6' : 'white',
+                      color: requestsToMeCurrentPage >= Math.ceil(requestsToMeData?.length / requestsToMePerPage) ? '#9ca3af' : '#374151',
+                      cursor: requestsToMeCurrentPage >= Math.ceil(requestsToMeData?.length / requestsToMePerPage) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => setRequestsToMeCurrentPage(Math.ceil(requestsToMeData?.length / requestsToMePerPage))}
+                    disabled={requestsToMeCurrentPage >= Math.ceil(requestsToMeData?.length / requestsToMePerPage)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: requestsToMeCurrentPage >= Math.ceil(requestsToMeData?.length / requestsToMePerPage) ? '#f3f4f6' : 'white',
+                      color: requestsToMeCurrentPage >= Math.ceil(requestsToMeData?.length / requestsToMePerPage) ? '#9ca3af' : '#374151',
+                      cursor: requestsToMeCurrentPage >= Math.ceil(requestsToMeData?.length / requestsToMePerPage) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Last
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <p className="text-center">No requests for your records</p>
         )}
