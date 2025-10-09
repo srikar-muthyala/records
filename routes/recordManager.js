@@ -6,6 +6,18 @@ const { recordManagerAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
+// @route   GET /api/record-manager/test
+// @desc    Test endpoint for record manager
+// @access  Private (Record Manager)
+router.get('/test', recordManagerAuth, async (req, res) => {
+  try {
+    res.json({ message: 'Record Manager routes are working!', user: req.user });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   GET /api/record-manager/requests
 // @desc    Get all requests
 // @access  Private (Record Manager)
@@ -95,6 +107,7 @@ router.put('/requests/:id', recordManagerAuth, [
 // @access  Private (Record Manager)
 router.get('/dashboard', recordManagerAuth, async (req, res) => {
   try {
+    console.log('Record Manager Dashboard endpoint hit by user:', req.user?.email);
     // Only count requests meant for record managers
     const recordManagerRequestFilter = {
       $or: [
