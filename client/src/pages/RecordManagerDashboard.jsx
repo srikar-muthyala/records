@@ -13,8 +13,22 @@ const RecordManagerDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [recordsPerPage, setRecordsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState('')
+
+  // Handle search
+  const handleSearch = () => {
+    setSearchQuery(searchTerm)
+    setCurrentPage(1) // Reset to first page when searching
+  }
+
+  // Handle clear search
+  const handleClearSearch = () => {
+    setSearchTerm('')
+    setSearchQuery('')
+    setCurrentPage(1)
+  }
 
   // Dashboard stats
   const { data: dashboardData, isLoading: dashboardLoading, refetch: refetchDashboard } = useQuery(
@@ -36,14 +50,14 @@ const RecordManagerDashboard = () => {
 
   // Records
   const { data: recordsData, isLoading: recordsLoading, refetch: refetchRecords } = useQuery(
-    ['recordManagerRecords', currentPage, recordsPerPage, searchTerm],
+    ['recordManagerRecords', currentPage, recordsPerPage, searchQuery],
     () => {
       const params = new URLSearchParams({
         page: currentPage,
         limit: recordsPerPage
       })
-      if (searchTerm.trim()) {
-        params.append('search', searchTerm.trim())
+      if (searchQuery.trim()) {
+        params.append('search', searchQuery.trim())
       }
       return axios.get(`/api/records?${params}`)
     },
@@ -452,7 +466,7 @@ const RecordManagerDashboard = () => {
           }
           .data-table th,
           .data-table td {
-            padding: 8px 12px;
+padding: 8px 12px;
           }
           .pagination-container {
             flex-direction: column;
@@ -461,10 +475,189 @@ const RecordManagerDashboard = () => {
           .pagination-info {
             order: -1;
           }
+          
+          /* Search Bar Mobile Styles */
+          .search-container {
+            padding: 16px 0 0 0 !important;
+          }
+          
+          .search-container > div:first-child {
+            flex-direction: column !important;
+            gap: 12px !important;
+          }
+          
+          .search-container input {
+            width: 100% !important;
+            maxWidth: none !important;
+            fontSize: 16px !important;
+            padding: 12px 40px 12px 16px !important;
+          }
+          
+          .search-container .search-button {
+            width: auto !important;
+            padding: 10px 20px !important;
+            fontSize: 14px !important;
+            justifyContent: center !important;
+            alignSelf: flex-start !important;
+          }
+
+          /* Records Management Table Mobile Styles */
+          .table-container {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            border-radius: 8px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+          }
+
+          .data-table {
+            min-width: 800px !important;
+            font-size: 14px !important;
+          }
+
+          .data-table th {
+            padding: 12px 8px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            background-color: #f8fafc !important;
+            border-bottom: 2px solid #e5e7eb !important;
+          }
+
+          .data-table td {
+            padding: 12px 8px !important;
+            font-size: 13px !important;
+            vertical-align: middle !important;
+            border-bottom: 1px solid #f3f4f6 !important;
+          }
+
+          /* Compact action buttons for records table */
+          .data-table td:last-child {
+            min-width: 120px !important;
+          }
+
+          .data-table td:last-child button {
+            padding: 6px 8px !important;
+            font-size: 11px !important;
+            margin: 2px !important;
+          }
+
+          /* Status badge adjustments for records table */
+          .data-table td .badge {
+            font-size: 10px !important;
+            padding: 3px 6px !important;
+          }
+
+          /* Card layout for very small screens */
+          @media (max-width: 480px) {
+            .table-container {
+              overflow: visible !important;
+            }
+
+            .data-table {
+              display: none !important;
+            }
+
+            .mobile-card-view {
+              display: block !important;
+            }
+
+            .mobile-card {
+              background: white !important;
+              border: 1px solid #e5e7eb !important;
+              border-radius: 8px !important;
+              margin-bottom: 12px !important;
+              padding: 16px !important;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+            }
+
+            .mobile-card-header {
+              display: flex !important;
+              justify-content: space-between !important;
+              align-items: flex-start !important;
+              margin-bottom: 12px !important;
+            }
+
+            .mobile-card-title {
+              font-size: 16px !important;
+              font-weight: 600 !important;
+              color: #1f2937 !important;
+              margin: 0 !important;
+            }
+
+            .mobile-card-status {
+              margin-left: 12px !important;
+            }
+
+            .mobile-card-details {
+              display: grid !important;
+              grid-template-columns: 1fr 1fr !important;
+              gap: 8px !important;
+              margin-bottom: 12px !important;
+            }
+
+            .mobile-card-detail {
+              display: flex !important;
+              flex-direction: column !important;
+            }
+
+            .mobile-card-label {
+              font-size: 11px !important;
+              color: #6b7280 !important;
+              font-weight: 500 !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.5px !important;
+              margin-bottom: 2px !important;
+            }
+
+            .mobile-card-value {
+              font-size: 13px !important;
+              color: #374151 !important;
+              font-weight: 500 !important;
+            }
+
+            .mobile-card-actions {
+              display: flex !important;
+              gap: 8px !important;
+              justify-content: flex-end !important;
+            }
+
+            .mobile-card-actions button {
+              padding: 8px 12px !important;
+              font-size: 12px !important;
+              border-radius: 6px !important;
+            }
+
+            /* Requests table mobile styles */
+            .mobile-card-actions select {
+              width: 100% !important;
+              padding: 8px 12px !important;
+              font-size: 12px !important;
+              border-radius: 6px !important;
+              border: 1px solid #d1d5db !important;
+              background-color: white !important;
+            }
+
+            .mobile-card-actions select option {
+              width: auto !important;
+              max-width: 200px !important;
+              padding: 8px 12px !important;
+              font-size: 12px !important;
+              white-space: nowrap !important;
+            }
+          }
         }
           @media (min-width: 769px) {
             .stat-card {
               text-align: left !important;
+            }
+
+            /* Desktop dropdown options styling */
+            select option {
+              width: auto !important;
+              max-width: 200px !important;
+              padding: 8px 12px !important;
+              font-size: 12px !important;
+              white-space: nowrap !important;
             }
           }
           @media (max-width: 768px) {
@@ -548,97 +741,112 @@ const RecordManagerDashboard = () => {
               </div>
 
               {/* Search Bar */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
+              <div className="search-container" style={{
                 marginBottom: '24px',
                 padding: '20px 24px 0 24px'
               }}>
-                <div style={{ 
-                  position: 'relative', 
-                  flex: '1', 
-                  maxWidth: '500px' 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
                 }}>
-                  <input
-                    type="text"
-                    placeholder="Search by Account Number, Name, or PPO ID..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px 12px 44px',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#1f2937',
-                      backgroundColor: 'white',
-                      transition: 'all 0.2s ease',
-                      outline: 'none'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6'
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb'
-                      e.target.style.boxShadow = 'none'
-                    }}
-                  />
-                  <div style={{
-                    position: 'absolute',
-                    left: '16px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    fontSize: '16px',
-                    color: '#9ca3af',
-                    pointerEvents: 'none'
+                  <div style={{ 
+                    position: 'relative', 
+                    flex: '1',
+                    maxWidth: '600px'
                   }}>
-                    🔍
+                    <input
+                      type="text"
+                      placeholder="Search by Account Number, Name, or PPO ID..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 40px 12px 16px',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#1f2937',
+                        backgroundColor: 'white',
+                        transition: 'all 0.2s ease',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#3b82f6'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
+                      }}
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={handleClearSearch}
+                        style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#6b7280',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.backgroundColor = '#f3f4f6'
+                          e.target.style.color = '#374151'
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.backgroundColor = 'transparent'
+                          e.target.style.color = '#6b7280'
+                        }}
+                      >
+                        <FiX size={16} />
+                      </button>
+                    )}
                   </div>
-                </div>
-                
-                {searchTerm && (
+                  
                   <button
-                    onClick={() => {
-                      setSearchTerm('');
-                      setCurrentPage(1);
-                    }}
-                    className="action-button search-clear-button"
+                    onClick={handleSearch}
+                    className="action-button search-button"
                     style={{
-                      padding: '12px 20px',
-                      backgroundColor: '#ef4444',
+                      padding: '8px 12px',
+                      backgroundColor: '#3b82f6',
                       color: 'white',
                       border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
                       fontWeight: '500',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px',
-                      whiteSpace: 'nowrap'
+                      gap: '4px',
+                      whiteSpace: 'nowrap',
+                      minWidth: '80px'
                     }}
                     onMouseOver={(e) => {
-                      e.target.style.backgroundColor = '#dc2626'
+                      e.target.style.backgroundColor = '#2563eb'
                       e.target.style.transform = 'translateY(-1px)'
-                      e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)'
+                      e.target.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.3)'
                     }}
                     onMouseOut={(e) => {
-                      e.target.style.backgroundColor = '#ef4444'
+                      e.target.style.backgroundColor = '#3b82f6'
                       e.target.style.transform = 'translateY(0)'
                       e.target.style.boxShadow = 'none'
                     }}
                   >
-                    <FiX size={16} />
-                    Clear Search
+                    Search
                   </button>
-                )}
+                </div>
               </div>
 
               <div className="table-container">
@@ -652,7 +860,6 @@ const RecordManagerDashboard = () => {
                       <th>File ID</th>
                       <th>Account Number</th>
                       <th>Pension Status</th>
-                      <th>Mobile</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
@@ -667,7 +874,6 @@ const RecordManagerDashboard = () => {
                         <td>{record.fileId || 'N/A'}</td>
                         <td>{record.employeeId || 'N/A'}</td>
                         <td>{getPensionStatusBadge(record.pensionStatus)}</td>
-                        <td>{record.mobileNumber || 'N/A'}</td>
                         <td>
                           {record.status === 'borrowed' && record.currentHolder ? (
                             <div style={{ 
@@ -737,6 +943,92 @@ const RecordManagerDashboard = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card View for Records Management */}
+              <div className="mobile-card-view" style={{ display: 'none' }}>
+                {recordsData?.records?.map(record => (
+                  <div key={record._id} className="mobile-card">
+                    <div className="mobile-card-header">
+                      <h4 className="mobile-card-title">{record.name || record.title}</h4>
+                      <div className="mobile-card-status">
+                        {record.status === 'borrowed' && record.currentHolder ? (
+                          <div style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            gap: '4px',
+                            alignItems: 'flex-end'
+                          }}>
+                            <span className="badge badge-warning" style={{
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: '600',
+                              textTransform: 'uppercase'
+                            }}>
+                              Borrowed
+                            </span>
+                            <div style={{ 
+                              fontSize: '10px', 
+                              color: '#6b7280', 
+                              fontWeight: '500'
+                            }}>
+                              by {record.currentHolder.name}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className={`badge ${record.status === 'available' ? 'badge-success' : 'badge-warning'}`} style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            textTransform: 'uppercase'
+                          }}>
+                            {record.status}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="mobile-card-details">
+                      <div className="mobile-card-detail">
+                        <div className="mobile-card-label">Category</div>
+                        <div className="mobile-card-value">{record.category}</div>
+                      </div>
+                      <div className="mobile-card-detail">
+                        <div className="mobile-card-label">PPO ID</div>
+                        <div className="mobile-card-value">{record.ppoUniqueId || 'N/A'}</div>
+                      </div>
+                      <div className="mobile-card-detail">
+                        <div className="mobile-card-label">Account Number</div>
+                        <div className="mobile-card-value">{record.employeeId || 'N/A'}</div>
+                      </div>
+                      <div className="mobile-card-detail">
+                        <div className="mobile-card-label">Pension Status</div>
+                        <div className="mobile-card-value">
+                          {getPensionStatusBadge(record.pensionStatus)}
+                        </div>
+                      </div>
+                      <div className="mobile-card-detail">
+                        <div className="mobile-card-label">Branch Code</div>
+                        <div className="mobile-card-value">{record.branchCode || 'N/A'}</div>
+                      </div>
+                      <div className="mobile-card-detail">
+                        <div className="mobile-card-label">File ID</div>
+                        <div className="mobile-card-value">{record.fileId || 'N/A'}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mobile-card-actions">
+                      <button className="btn btn-warning btn-sm" style={{ fontSize: '12px', padding: '6px 12px', marginRight: '8px' }}>
+                        <FiEdit /> Edit
+                      </button>
+                      <button className="btn btn-danger btn-sm" style={{ fontSize: '12px', padding: '6px 12px' }}>
+                        <FiX /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
               
               {recordsData?.totalPages > 1 && (
@@ -825,6 +1117,7 @@ const RecordManagerDashboard = () => {
                     <th>User</th>
                     <th>Record</th>
                     <th>Category</th>
+                    <th>File ID</th>
                     <th>Request Date</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -836,6 +1129,7 @@ const RecordManagerDashboard = () => {
                       <td>{request.user?.name}</td>
                       <td>{request.record?.title}</td>
                       <td>{request.record?.category}</td>
+                      <td>{request.record?.fileId || 'N/A'}</td>
                       <td>{new Date(request.createdAt).toLocaleDateString()}</td>
                       <td>{getStatusBadge(request.status)}</td>
                       <td>
@@ -864,6 +1158,62 @@ const RecordManagerDashboard = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View for Requests */}
+            <div className="mobile-card-view" style={{ display: 'none' }}>
+              {requestsData?.map(request => (
+                <div key={request._id} className="mobile-card">
+                  <div className="mobile-card-header">
+                    <h4 className="mobile-card-title">{request.record?.title}</h4>
+                    <div className="mobile-card-status">
+                      {getStatusBadge(request.status)}
+                    </div>
+                  </div>
+                  
+                  <div className="mobile-card-details">
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">User</div>
+                      <div className="mobile-card-value">{request.user?.name}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Category</div>
+                      <div className="mobile-card-value">{request.record?.category}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">File ID</div>
+                      <div className="mobile-card-value">{request.record?.fileId || 'N/A'}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Request Date</div>
+                      <div className="mobile-card-value">{new Date(request.createdAt).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mobile-card-actions">
+                    <select
+                      value={request.status}
+                      onChange={(e) => handleStatusChange(request, e.target.value)}
+                      style={{
+                        padding: '8px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        backgroundColor: 'white',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        minWidth: '140px',
+                        width: 'auto',
+                        maxWidth: '200px'
+                      }}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="handed_over">Handed Over</option>
+                      <option value="searching">Searching</option>
+                      <option value="not_traceable">Not Traceable</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

@@ -13,7 +13,7 @@ router.get('/requests', recordManagerAuth, async (req, res) => {
   try {
     const requests = await Request.find()
       .populate('user', 'name email')
-      .populate('record', 'title category status')
+      .populate('record', 'title category status fileId')
       .populate('processedBy', 'name')
       .sort({ createdAt: -1 });
     

@@ -13,28 +13,31 @@ const UserDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [recordsPerPage, setRecordsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
 
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-      setCurrentPage(1) // Reset to first page when searching
-    }, 500) // 500ms delay
+  // Handle search
+  const handleSearch = () => {
+    setSearchQuery(searchTerm)
+    setCurrentPage(1) // Reset to first page when searching
+  }
 
-    return () => clearTimeout(timer)
-  }, [searchTerm])
+  // Handle clear search
+  const handleClearSearch = () => {
+    setSearchTerm('')
+    setSearchQuery('')
+    setCurrentPage(1)
+  }
 
   // Fetch records
   const { data: recordsData, isLoading: recordsLoading, refetch: refetchRecords } = useQuery(
-    ['records', debouncedSearchTerm, currentPage, recordsPerPage],
+    ['records', searchQuery, currentPage, recordsPerPage],
     () => {
       const params = new URLSearchParams({
         page: currentPage,
         limit: recordsPerPage
       });
-      if (debouncedSearchTerm.trim()) {
-        params.append('search', debouncedSearchTerm.trim());
+      if (searchQuery.trim()) {
+        params.append('search', searchQuery.trim());
       }
       return axios.get(`/api/user/records?${params.toString()}`);
     },
@@ -85,6 +88,7 @@ const UserDashboard = () => {
     setRecordToReturn(record)
     setShowReturnModal(true)
   }
+
 
   const confirmReturnRecord = async () => {
     try {
@@ -213,10 +217,7 @@ const UserDashboard = () => {
               type="text"
               placeholder="Search by Account Number, Name, or PPO ID..."
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
               style={{
                 width: '100%',
@@ -241,60 +242,80 @@ const UserDashboard = () => {
                 e.target.style.boxShadow = 'none';
               }}
             />
-            <div style={{
-              position: 'absolute',
-              left: '16px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#6b7280',
-              fontSize: '18px'
-            }}>
-              🔍
-            </div>
           </div>
           
-          {searchTerm && (
+          <button
+            onClick={handleSearch}
+            className="search-button"
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 1px 3px rgba(59, 130, 246, 0.2)'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#2563eb';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.3)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = '#3b82f6';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 1px 3px rgba(59, 130, 246, 0.2)';
+            }}
+          >
+            Search
+          </button>
+          
+          {searchQuery && (
             <button
-              onClick={() => {
-                setSearchTerm('');
-                setCurrentPage(1);
-              }}
+              onClick={handleClearSearch}
               className="search-clear-button"
               style={{
-                padding: '12px 20px',
+                padding: '8px 16px',
                 backgroundColor: '#ef4444',
                 color: 'white',
                 border: 'none',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '600',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: '500',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
+                transition: 'all 0.2s ease',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
+                gap: '6px',
+                boxShadow: '0 1px 3px rgba(239, 68, 68, 0.2)'
               }}
               onMouseOver={(e) => {
                 e.target.style.backgroundColor = '#dc2626';
                 e.target.style.transform = 'translateY(-1px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+                e.target.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.3)';
               }}
               onMouseOut={(e) => {
                 e.target.style.backgroundColor = '#ef4444';
                 e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.2)';
+                e.target.style.boxShadow = '0 1px 3px rgba(239, 68, 68, 0.2)';
               }}
             >
-              <FiX size={16} />
+              <FiX size={14} />
               Clear
             </button>
           )}
           </div>
         
         {recordsData?.records?.length > 0 ? (
-          <div className="table-responsive">
-            <table className="table">
+          <>
+            <div className="table-responsive">
+              <table className="table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -427,83 +448,176 @@ const UserDashboard = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-center">No records found</p>
-        )}
-        
-        {/* Pagination Controls for Available Records */}
-        {recordsData?.totalPages > 1 && (
-          <div className="pagination-container" style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: '24px',
-            padding: '16px 20px',
-            backgroundColor: '#f9fafb',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb'
-          }}>
-            {/* Records per page selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ 
-                fontSize: '14px', 
-                fontWeight: '500', 
-                color: '#374151' 
+              </table>
+            </div>
+
+            {/* Mobile Card View for Available Records */}
+            <div className="mobile-card-view" style={{ display: 'none' }}>
+              {recordsData.records.map(record => (
+                <div key={record._id} className="mobile-card">
+                <div className="mobile-card-header">
+                  <h4 className="mobile-card-title">{record.name || record.title}</h4>
+                  <div className="mobile-card-status">
+                    {record.status === 'borrowed' && record.currentHolder ? (
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '4px',
+                        alignItems: 'flex-end'
+                      }}>
+                        <span className="badge badge-warning" style={{
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          fontWeight: '600',
+                          textTransform: 'uppercase'
+                        }}>
+                          Borrowed
+                        </span>
+                        <div style={{ 
+                          fontSize: '10px', 
+                          color: '#6b7280', 
+                          fontWeight: '500'
+                        }}>
+                          by {record.currentHolder.name}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className={`badge ${record.status === 'available' ? 'badge-success' : 'badge-warning'}`} style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        textTransform: 'uppercase'
+                      }}>
+                        {record.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mobile-card-details">
+                  <div className="mobile-card-detail">
+                    <div className="mobile-card-label">Category</div>
+                    <div className="mobile-card-value">{record.category}</div>
+                  </div>
+                  <div className="mobile-card-detail">
+                    <div className="mobile-card-label">PPO ID</div>
+                    <div className="mobile-card-value">{record.ppoUniqueId || 'N/A'}</div>
+                  </div>
+                  <div className="mobile-card-detail">
+                    <div className="mobile-card-label">Account Number</div>
+                    <div className="mobile-card-value">{record.employeeId || 'N/A'}</div>
+                  </div>
+                  <div className="mobile-card-detail">
+                    <div className="mobile-card-label">Pension Status</div>
+                    <div className="mobile-card-value">
+                      <span className={`badge ${
+                        record.pensionStatus === 'A' ? 'badge-success' : 
+                        record.pensionStatus === 'D' ? 'badge-danger' : 
+                        record.pensionStatus === 'S' ? 'badge-warning' : 
+                        'badge-secondary'
+                      }`} style={{ fontSize: '10px', padding: '2px 6px' }}>
+                        {record.pensionStatus === 'A' ? 'Active' : 
+                         record.pensionStatus === 'D' ? 'Discontinued' : 
+                         record.pensionStatus === 'S' ? 'Suspended' : 
+                         record.pensionStatus || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mobile-card-actions">
+                  {record.currentHolder && record.currentHolder._id === user?._id ? (
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}>You have this record</span>
+                  ) : (
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => handleRequestRecord(record._id)}
+                      disabled={record.status === 'borrowed'}
+                      style={{ fontSize: '12px', padding: '6px 12px' }}
+                    >
+                      <FiPlus /> Request
+                    </button>
+                  )}
+                </div>
+
+                </div>
+              ))}
+            </div>
+            
+
+            {/* Pagination Controls for Available Records */}
+            {recordsData?.totalPages > 1 && (
+              <div className="pagination-container" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '24px',
+                padding: '16px 20px',
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
               }}>
-                Records per page:
-              </label>
-              <select
-                value={recordsPerPage}
-                onChange={(e) => {
-                  setRecordsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  backgroundColor: 'white',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
+                {/* Records per page selector */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ 
+                    fontSize: '14px', 
+                    fontWeight: '500', 
+                    color: '#374151' 
+                  }}>
+                    Records per page:
+                  </label>
+                  <select
+                    value={recordsPerPage}
+                    onChange={(e) => {
+                      setRecordsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      backgroundColor: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
 
-            {/* Pagination info */}
-            <div style={{ 
-              fontSize: '14px', 
-              color: '#6b7280',
-              fontWeight: '500'
-            }}>
-              Showing {((currentPage - 1) * recordsPerPage) + 1} to {Math.min(currentPage * recordsPerPage, recordsData?.total || 0)} of {recordsData?.total || 0} records
-            </div>
+                {/* Pagination info */}
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}>
+                  Showing {((currentPage - 1) * recordsPerPage) + 1} to {Math.min(currentPage * recordsPerPage, recordsData?.total || 0)} of {recordsData?.total || 0} records
+                </div>
 
-            {/* Pagination buttons */}
-            <div className="pagination-buttons" style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  backgroundColor: currentPage === 1 ? '#f3f4f6' : 'white',
-                  color: currentPage === 1 ? '#9ca3af' : '#374151',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                First
-              </button>
+                {/* Pagination buttons */}
+                <div className="pagination-buttons" style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      backgroundColor: currentPage === 1 ? '#f3f4f6' : 'white',
+                      color: currentPage === 1 ? '#9ca3af' : '#374151',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    First
+                  </button>
               <button
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
@@ -582,9 +696,13 @@ const UserDashboard = () => {
                 }}
               >
                 Last
-          </button>
-        </div>
+              </button>
+            </div>
           </div>
+            )}
+          </>
+        ) : (
+          <p className="text-center">No records found</p>
         )}
       </div>
 
@@ -690,6 +808,60 @@ const UserDashboard = () => {
           </div>
         ) : (
           <p className="text-center">No records currently borrowed</p>
+        )}
+
+        {/* Mobile Card View for My Records */}
+        {myRecordsData?.length > 0 && (
+          <div className="mobile-card-view" style={{ display: 'none' }}>
+            {myRecordsData.map(record => (
+              <div key={record._id} className="mobile-card">
+                <div className="mobile-card-header">
+                  <h4 className="mobile-card-title">{record.name || record.title}</h4>
+                  <div className="mobile-card-status">
+                    <span className="badge badge-success" style={{
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '10px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase'
+                    }}>
+                      Borrowed
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="mobile-card-details">
+                  <div className="mobile-card-detail">
+                    <div className="mobile-card-label">Category</div>
+                    <div className="mobile-card-value">{record.category}</div>
+                  </div>
+                  <div className="mobile-card-detail">
+                    <div className="mobile-card-label">PPO ID</div>
+                    <div className="mobile-card-value">{record.ppoUniqueId || 'N/A'}</div>
+                  </div>
+                  <div className="mobile-card-detail">
+                    <div className="mobile-card-label">Account Number</div>
+                    <div className="mobile-card-value">{record.employeeId || 'N/A'}</div>
+                  </div>
+                  <div className="mobile-card-detail">
+                    <div className="mobile-card-label">Borrowed Date</div>
+                    <div className="mobile-card-value">{new Date(record.borrowedDate).toLocaleDateString()}</div>
+                  </div>
+                </div>
+                
+                <div className="mobile-card-actions">
+                  <button
+                    className="btn btn-warning btn-sm"
+                    onClick={() => handleReturnRecord(record)}
+                    style={{ fontSize: '12px', padding: '6px 12px' }}
+                  >
+                    <FiRotateCcw /> Return
+                  </button>
+                </div>
+
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -1041,6 +1213,143 @@ const UserDashboard = () => {
           .pagination-buttons {
             flex-wrap: wrap !important;
             justify-content: center !important;
+          }
+
+          /* Table Responsive Styles */
+          .table-responsive {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            border-radius: 8px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+          }
+
+          .table {
+            min-width: 800px !important;
+            font-size: 14px !important;
+          }
+
+          .table th {
+            padding: 12px 8px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            background-color: #f8fafc !important;
+            border-bottom: 2px solid #e5e7eb !important;
+          }
+
+          .table td {
+            padding: 12px 8px !important;
+            font-size: 13px !important;
+            vertical-align: middle !important;
+            border-bottom: 1px solid #f3f4f6 !important;
+          }
+
+          /* Hide less important columns on mobile */
+          .table th:nth-child(4), /* Branch Code */
+          .table td:nth-child(4),
+          .table th:nth-child(5), /* File ID */
+          .table td:nth-child(5),
+          .table th:nth-child(8), /* Mobile */
+          .table td:nth-child(8) {
+            display: none !important;
+          }
+
+          /* Compact action buttons */
+          .table td:last-child {
+            min-width: 80px !important;
+          }
+
+          .table td:last-child button {
+            padding: 6px 8px !important;
+            font-size: 11px !important;
+            margin: 2px !important;
+          }
+
+          /* Status badge adjustments */
+          .table td .badge {
+            font-size: 10px !important;
+            padding: 3px 6px !important;
+          }
+
+          /* Card layout for very small screens */
+          @media (max-width: 480px) {
+            .table-responsive {
+              overflow: visible !important;
+            }
+
+            .table {
+              display: none !important;
+            }
+
+            .mobile-card-view {
+              display: block !important;
+            }
+
+            .mobile-card {
+              background: white !important;
+              border: 1px solid #e5e7eb !important;
+              border-radius: 8px !important;
+              margin-bottom: 12px !important;
+              padding: 16px !important;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+            }
+
+            .mobile-card-header {
+              display: flex !important;
+              justify-content: space-between !important;
+              align-items: flex-start !important;
+              margin-bottom: 12px !important;
+            }
+
+            .mobile-card-title {
+              font-size: 16px !important;
+              font-weight: 600 !important;
+              color: #1f2937 !important;
+              margin: 0 !important;
+            }
+
+            .mobile-card-status {
+              margin-left: 12px !important;
+            }
+
+            .mobile-card-details {
+              display: grid !important;
+              grid-template-columns: 1fr 1fr !important;
+              gap: 8px !important;
+              margin-bottom: 12px !important;
+            }
+
+            .mobile-card-detail {
+              display: flex !important;
+              flex-direction: column !important;
+            }
+
+            .mobile-card-label {
+              font-size: 11px !important;
+              color: #6b7280 !important;
+              font-weight: 500 !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.5px !important;
+              margin-bottom: 2px !important;
+            }
+
+            .mobile-card-value {
+              font-size: 13px !important;
+              color: #374151 !important;
+              font-weight: 500 !important;
+            }
+
+            .mobile-card-actions {
+              display: flex !important;
+              gap: 8px !important;
+              justify-content: flex-end !important;
+            }
+
+            .mobile-card-actions button {
+              padding: 8px 12px !important;
+              font-size: 12px !important;
+              border-radius: 6px !important;
+            }
           }
         }
       `}</style>
