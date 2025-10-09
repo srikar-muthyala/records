@@ -32,7 +32,16 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const response = await axios.get('/api/auth/me')
-      setUser(response.data.user)
+      const user = response.data.user
+      
+      // Check if user might be using default password (we can't know for sure from server)
+      // This is a fallback for when user refreshes the page
+      const userWithPasswordFlag = {
+        ...user,
+        usingDefaultPassword: false // Default to false, will be set during login
+      }
+      
+      setUser(userWithPasswordFlag)
     } catch (error) {
       localStorage.removeItem('token')
       delete axios.defaults.headers.common['Authorization']
@@ -46,11 +55,20 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post('/api/auth/login', { email, password })
       const { token, user } = response.data
       
+      // Check if user is using default password
+      const isDefaultPassword = password === 'password' || password === 'password123'
+      
+      // Add flag to user object to indicate default password usage
+      const userWithPasswordFlag = {
+        ...user,
+        usingDefaultPassword: isDefaultPassword
+      }
+      
       localStorage.setItem('token', token)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      setUser(user)
+      setUser(userWithPasswordFlag)
       
-      return { success: true, user }
+      return { success: true, user: userWithPasswordFlag }
     } catch (error) {
       return { 
         success: false, 

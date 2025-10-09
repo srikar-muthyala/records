@@ -2325,6 +2325,11 @@ const AdminDashboard = () => {
           const formData = new FormData(e.target)
 
           const data = Object.fromEntries(formData)
+          
+          // Set default password if not provided
+          if (!data.password || data.password === '') {
+            data.password = 'password123'
+          }
 
           
           
@@ -2388,9 +2393,23 @@ const AdminDashboard = () => {
 
             required
 
-            placeholder="Enter password (min 6 characters)"
+            defaultValue="password123"
+
+            placeholder="Default password: password123"
 
           />
+          
+          <div style={{ 
+            marginBottom: '16px', 
+            padding: '12px', 
+            backgroundColor: '#fef3c7', 
+            border: '1px solid #f59e0b', 
+            borderRadius: '6px',
+            fontSize: '14px',
+            color: '#92400e'
+          }}>
+            <strong>Note:</strong> The user will be required to change this default password on their first login.
+          </div>
 
           
           
