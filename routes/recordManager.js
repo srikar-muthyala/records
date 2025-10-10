@@ -103,6 +103,57 @@ router.put('/requests/:id', recordManagerAuth, [
   }
 });
 
+// @route   PUT /api/record-manager/confirm-return/:requestId
+// @desc    Confirm a record return
+// @access  Private (Record Manager)
+router.put('/confirm-return/:requestId', recordManagerAuth, async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.requestId)
+      .populate('record')
+      .populate('user');
+
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    if (request.requestType !== 'return') {
+      return res.status(400).json({ message: 'This is not a return request' });
+    }
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({ message: 'Request has already been processed' });
+    }
+
+    // Update the record to available status
+    const record = request.record;
+    record.status = 'available';
+    record.currentHolder = null;
+    record.borrowedDate = null;
+    record.returnDate = new Date();
+    await record.save();
+
+    // Update the request status
+    request.status = 'approved';
+    request.processedBy = req.user._id;
+    request.processedAt = new Date();
+    request.adminResponse = 'Return confirmed. Record is now available.';
+    await request.save();
+
+    res.json({
+      message: 'Return confirmed successfully',
+      record: {
+        _id: record._id,
+        title: record.title,
+        status: record.status,
+        currentHolder: record.currentHolder
+      }
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   GET /api/record-manager/dashboard
 // @desc    Get dashboard data for record manager
 // @access  Private (Record Manager)

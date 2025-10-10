@@ -167,7 +167,7 @@ const UserDashboard = () => {
   const confirmReturnRecord = async () => {
     try {
       await axios.post(`/api/user/return/${recordToReturn._id}`)
-      toast.success('Record returned successfully')
+      toast.success('Return request submitted. Awaiting record manager confirmation.')
       setShowReturnModal(false)
       setRecordToReturn(null)
       refetchMyRecords()

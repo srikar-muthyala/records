@@ -247,7 +247,7 @@ router.get('/my-records', auth, async (req, res) => {
 });
 
 // @route   POST /api/user/return/:recordId
-// @desc    Return a record directly
+// @desc    Request to return a record (requires record manager confirmation)
 // @access  Private
 router.post('/return/:recordId', auth, async (req, res) => {
   try {
@@ -261,12 +261,22 @@ router.post('/return/:recordId', auth, async (req, res) => {
       return res.status(400).json({ message: 'You do not have this record' });
     }
 
-    // Directly return the record
-    record.currentHolder = null;
-    record.status = 'available';
-    await record.save();
+    // Create a return request for record manager confirmation
+    const returnRequest = new Request({
+      user: req.user._id,
+      record: record._id,
+      status: 'pending',
+      requestType: 'return',
+      targetUser: null, // Goes to record manager
+      message: 'User has returned this record. Please confirm.',
+      processedBy: null,
+      processedAt: null,
+      adminResponse: null
+    });
 
-    res.json({ message: 'Record returned successfully' });
+    await returnRequest.save();
+
+    res.json({ message: 'Return request submitted. Awaiting record manager confirmation.' });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });

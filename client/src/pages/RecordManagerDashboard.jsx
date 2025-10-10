@@ -153,6 +153,17 @@ const RecordManagerDashboard = () => {
     }
   }
 
+  const handleConfirmReturn = async (requestId) => {
+    try {
+      await axios.put(`/api/record-manager/confirm-return/${requestId}`)
+      toast.success('Return confirmed successfully')
+      refetchRequests()
+      refetchRecords()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to confirm return')
+    }
+  }
+
   const getStatusBadge = (status) => {
     const badges = {
       pending: { class: 'badge-warning', text: 'Pending' },
@@ -1214,24 +1225,58 @@ padding: 8px 12px;
                       <td>{getStatusBadge(request.status)}</td>
                       <td>
                         <div className="action-buttons" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <select
-                            value={request.status}
-                            onChange={(e) => handleStatusChange(request, e.target.value)}
-                            style={{
-                              padding: '6px 12px',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '6px',
-                              backgroundColor: 'white',
-                              fontSize: '12px',
-                              cursor: 'pointer',
-                              minWidth: '120px'
-                            }}
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="handed_over">Handed Over</option>
-                            <option value="searching">Searching</option>
-                            <option value="not_traceable">Not Traceable</option>
-                          </select>
+                          {request.requestType === 'return' && request.status === 'pending' ? (
+                            <button
+                              style={{
+                                backgroundColor: '#10b981',
+                                color: 'white',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                              }}
+                              onClick={() => handleConfirmReturn(request._id)}
+                              onMouseOver={(e) => {
+                                e.target.style.backgroundColor = '#059669'
+                                e.target.style.transform = 'translateY(-1px)'
+                                e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
+                              }}
+                              onMouseOut={(e) => {
+                                e.target.style.backgroundColor = '#10b981'
+                                e.target.style.transform = 'translateY(0)'
+                                e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                              }}
+                            >
+                              <FiPlus size={14} />
+                              Confirm Return
+                            </button>
+                          ) : request.requestType === 'borrow' ? (
+                            <select
+                              value={request.status}
+                              onChange={(e) => handleStatusChange(request, e.target.value)}
+                              style={{
+                                padding: '6px 12px',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                backgroundColor: 'white',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                minWidth: '120px'
+                              }}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="handed_over">Handed Over</option>
+                              <option value="searching">Searching</option>
+                              <option value="not_traceable">Not Traceable</option>
+                            </select>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -1291,26 +1336,62 @@ padding: 8px 12px;
                   </div>
                   
                   <div className="mobile-card-actions">
-                    <select
-                      value={request.status}
-                      onChange={(e) => handleStatusChange(request, e.target.value)}
-                      style={{
-                        padding: '8px 12px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '6px',
-                        backgroundColor: 'white',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        minWidth: '140px',
-                        width: 'auto',
-                        maxWidth: '200px'
-                      }}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="handed_over">Handed Over</option>
-                      <option value="searching">Searching</option>
-                      <option value="not_traceable">Not Traceable</option>
-                    </select>
+                    {request.requestType === 'return' && request.status === 'pending' ? (
+                      <button
+                        style={{
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          width: '100%',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                        }}
+                        onClick={() => handleConfirmReturn(request._id)}
+                        onMouseOver={(e) => {
+                          e.target.style.backgroundColor = '#059669'
+                          e.target.style.transform = 'translateY(-1px)'
+                          e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.backgroundColor = '#10b981'
+                          e.target.style.transform = 'translateY(0)'
+                          e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                        }}
+                      >
+                        <FiPlus size={14} />
+                        Confirm Return
+                      </button>
+                    ) : request.requestType === 'borrow' ? (
+                      <select
+                        value={request.status}
+                        onChange={(e) => handleStatusChange(request, e.target.value)}
+                        style={{
+                          padding: '8px 12px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          backgroundColor: 'white',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          minWidth: '140px',
+                          width: 'auto',
+                          maxWidth: '200px'
+                        }}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="handed_over">Handed Over</option>
+                        <option value="searching">Searching</option>
+                        <option value="not_traceable">Not Traceable</option>
+                      </select>
+                    ) : null}
                   </div>
                 </div>
               ))}
