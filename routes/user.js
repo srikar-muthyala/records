@@ -417,4 +417,51 @@ router.put('/change-password', auth, [
   }
 });
 
+// @route   PUT /api/user/confirm-receipt/:requestId
+// @desc    Confirm receipt of a record
+// @access  Private
+router.put('/confirm-receipt/:requestId', auth, async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.requestId)
+      .populate('record')
+      .populate('user');
+
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    if (request.user._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'You can only confirm your own requests' });
+    }
+
+    if (request.status !== 'awaiting_confirmation') {
+      return res.status(400).json({ message: 'This request is not awaiting confirmation' });
+    }
+
+    // Update the record to borrowed status
+    const record = request.record;
+    record.status = 'borrowed';
+    record.currentHolder = req.user._id;
+    record.borrowedDate = new Date();
+    await record.save();
+
+    // Update the request status
+    request.status = 'handed_over';
+    await request.save();
+
+    res.json({ 
+      message: 'Record receipt confirmed successfully',
+      record: {
+        id: record._id,
+        title: record.title,
+        status: record.status,
+        borrowedDate: record.borrowedDate
+      }
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

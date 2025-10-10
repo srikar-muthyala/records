@@ -199,6 +199,17 @@ const UserDashboard = () => {
     }
   }
 
+  const handleConfirmReceipt = async (requestId) => {
+    try {
+      await axios.put(`/api/user/confirm-receipt/${requestId}`)
+      toast.success('Record receipt confirmed successfully')
+      refetchRequests()
+      refetchMyRecords()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to confirm receipt')
+    }
+  }
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'pending':
@@ -213,6 +224,8 @@ const UserDashboard = () => {
         return <span className="badge badge-primary">Searching</span>
       case 'not_traceable':
         return <span className="badge badge-secondary">Not Traceable</span>
+      case 'awaiting_confirmation':
+        return <span className="badge badge-warning">Awaiting Confirmation</span>
       default:
         return <span className="badge badge-info">{status}</span>
     }
@@ -1136,6 +1149,7 @@ const UserDashboard = () => {
                     <th>Status</th>
                     <th>Date</th>
                     <th>Response</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1148,6 +1162,41 @@ const UserDashboard = () => {
                       <td>{getStatusBadge(request.status)}</td>
                       <td>{new Date(request.createdAt).toLocaleDateString()}</td>
                       <td>{request.adminResponse || '-'}</td>
+                      <td>
+                        {request.status === 'awaiting_confirmation' && (
+                          <button
+                            style={{
+                              backgroundColor: '#10b981',
+                              color: 'white',
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              border: 'none',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                            onClick={() => handleConfirmReceipt(request._id)}
+                            onMouseOver={(e) => {
+                              e.target.style.backgroundColor = '#059669'
+                              e.target.style.transform = 'translateY(-1px)'
+                              e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.backgroundColor = '#10b981'
+                              e.target.style.transform = 'translateY(0)'
+                              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                          >
+                            <FiPlus size={14} />
+                            Confirm
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1181,6 +1230,44 @@ const UserDashboard = () => {
                       <div className="mobile-card-value">{request.adminResponse || '-'}</div>
                     </div>
                   </div>
+                  
+                  {request.status === 'awaiting_confirmation' && (
+                    <div className="mobile-card-actions">
+                      <button
+                        style={{
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          width: '100%',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                        }}
+                        onClick={() => handleConfirmReceipt(request._id)}
+                        onMouseOver={(e) => {
+                          e.target.style.backgroundColor = '#059669'
+                          e.target.style.transform = 'translateY(-1px)'
+                          e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.backgroundColor = '#10b981'
+                          e.target.style.transform = 'translateY(0)'
+                          e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                        }}
+                      >
+                        <FiPlus size={14} />
+                        Confirm
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

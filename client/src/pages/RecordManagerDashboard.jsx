@@ -160,7 +160,8 @@ const RecordManagerDashboard = () => {
       rejected: { class: 'badge-danger', text: 'Rejected' },
       handed_over: { class: 'badge-info', text: 'Handed Over' },
       searching: { class: 'badge-primary', text: 'Searching' },
-      not_traceable: { class: 'badge-secondary', text: 'Not Traceable' }
+      not_traceable: { class: 'badge-secondary', text: 'Not Traceable' },
+      awaiting_confirmation: { class: 'badge-warning', text: 'Awaiting Confirmation' }
     }
     const badge = badges[status] || { class: 'badge-secondary', text: status }
     return <span className={`badge ${badge.class}`}>{badge.text}</span>

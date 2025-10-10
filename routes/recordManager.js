@@ -53,7 +53,7 @@ router.get('/requests', recordManagerAuth, async (req, res) => {
 // @desc    Approve or reject request
 // @access  Private (Record Manager)
 router.put('/requests/:id', recordManagerAuth, [
-  body('status').isIn(['pending', 'rejected', 'handed_over', 'searching', 'not_traceable']).withMessage('Status must be pending, rejected, handed_over, searching, or not_traceable'),
+  body('status').isIn(['pending', 'rejected', 'handed_over', 'searching', 'not_traceable', 'awaiting_confirmation']).withMessage('Status must be pending, rejected, handed_over, searching, not_traceable, or awaiting_confirmation'),
   body('adminResponse').optional().isString()
 ], async (req, res) => {
   try {
@@ -83,18 +83,12 @@ router.put('/requests/:id', recordManagerAuth, [
     request.adminResponse = adminResponse;
 
     if (status === 'handed_over') {
-      // Update record status when handed over
-      console.log('Handing over record:', request.record._id, 'to user:', request.user._id);
-      request.record.status = 'borrowed';
-      request.record.currentHolder = request.user._id;
-      request.record.borrowedDate = new Date();
-      await request.record.save();
-      console.log('Record updated successfully:', {
-        recordId: request.record._id,
-        status: request.record.status,
-        currentHolder: request.record.currentHolder,
-        borrowedDate: request.record.borrowedDate
-      });
+      // Update the original request to await confirmation
+      console.log('Updating original request to await confirmation for record:', request.record._id, 'to user:', request.user._id);
+      
+      // Update the original request status and response
+      request.status = 'awaiting_confirmation';
+      request.adminResponse = 'Record has been handed over. Please confirm.';
     }
 
     await request.save();
