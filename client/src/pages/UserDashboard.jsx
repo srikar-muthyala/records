@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useQuery } from 'react-query'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FiSearch, FiPlus, FiEye, FiX, FiRotateCcw, FiRefreshCw } from 'react-icons/fi'
+import { FiSearch, FiPlus, FiEye, FiX, FiRotateCcw, FiRefreshCw, FiBook } from 'react-icons/fi'
 import SimpleModal from '../components/SimpleModal'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -20,6 +20,7 @@ const UserDashboard = () => {
   const [recordsPerPage, setRecordsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeSection, setActiveSection] = useState('available-records')
   
   // Pagination for My Requests
   const [myRequestsCurrentPage, setMyRequestsCurrentPage] = useState(1)
@@ -406,7 +407,216 @@ const UserDashboard = () => {
         </p>
       </div>
       
+      {/* Stats Cards */}
+      <div className="stats-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '20px',
+        marginBottom: '32px'
+      }}>
+        <div 
+          className="stat-card"
+          onClick={() => setActiveSection('available-records')}
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            borderLeft: '4px solid #3b82f6'
+          }}
+          onMouseOver={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(-2px)'
+              e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }
+          }}
+          onMouseOut={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(0)'
+              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              backgroundColor: '#dbeafe', 
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <FiBook size={20} color="#3b82f6" />
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#3b82f6' }}>
+              {recordsData?.total || 0}
+            </div>
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '4px' }}>
+            Available Records
+          </div>
+          <div style={{ fontSize: '14px', color: '#6b7280' }}>
+            Browse and request records
+          </div>
+        </div>
+
+        <div 
+          className="stat-card"
+          onClick={() => setActiveSection('my-records')}
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            borderLeft: '4px solid #10b981'
+          }}
+          onMouseOver={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(-2px)'
+              e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }
+          }}
+          onMouseOut={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(0)'
+              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              backgroundColor: '#d1fae5', 
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <FiEye size={20} color="#10b981" />
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#10b981' }}>
+              {myRecordsData?.length || 0}
+            </div>
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '4px' }}>
+            My Records
+          </div>
+          <div style={{ fontSize: '14px', color: '#6b7280' }}>
+            Currently borrowed records
+          </div>
+        </div>
+
+        <div 
+          className="stat-card"
+          onClick={() => setActiveSection('my-requests')}
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            borderLeft: '4px solid #f59e0b'
+          }}
+          onMouseOver={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(-2px)'
+              e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }
+          }}
+          onMouseOut={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(0)'
+              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              backgroundColor: '#fef3c7', 
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <FiPlus size={20} color="#f59e0b" />
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#f59e0b' }}>
+              {requestsData?.length || 0}
+            </div>
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '4px' }}>
+            My Requests
+          </div>
+          <div style={{ fontSize: '14px', color: '#6b7280' }}>
+            Track your submitted requests
+          </div>
+        </div>
+
+        <div 
+          className="stat-card"
+          onClick={() => setActiveSection('requests-to-me')}
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            borderLeft: '4px solid #8b5cf6'
+          }}
+          onMouseOver={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(-2px)'
+              e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }
+          }}
+          onMouseOut={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(0)'
+              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              backgroundColor: '#ede9fe', 
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <FiRotateCcw size={20} color="#8b5cf6" />
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#8b5cf6' }}>
+              {requestsToMeData?.length || 0}
+            </div>
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '4px' }}>
+            Requests to Me
+          </div>
+          <div style={{ fontSize: '14px', color: '#6b7280' }}>
+            Approve or reject requests
+          </div>
+        </div>
+      </div>
+      
       {/* Available Records */}
+      {activeSection === 'available-records' && (
       <div className="card mb-4">
         <div className="card-header" style={{
           backgroundColor: '#f8fafc',
@@ -674,7 +884,7 @@ const UserDashboard = () => {
           >
                           <FiPlus size={14} />
                           Request
-                        </button>
+          </button>
                       )}
                     </td>
                   </tr>
@@ -725,8 +935,8 @@ const UserDashboard = () => {
                         {record.status}
                       </span>
                     )}
-                  </div>
-                </div>
+        </div>
+      </div>
                 
                 <div className="mobile-card-details">
                   <div className="mobile-card-detail">
@@ -953,8 +1163,10 @@ const UserDashboard = () => {
           <p className="text-center">No records found</p>
         )}
       </div>
+      )}
 
       {/* My Records */}
+      {activeSection === 'my-records' && (
       <div className="card mb-4">
         <div className="card-header" style={{
           backgroundColor: '#f8fafc',
@@ -1076,7 +1288,7 @@ const UserDashboard = () => {
                       Borrowed
                     </span>
                   </div>
-                </div>
+      </div>
                 
                 <div className="mobile-card-details">
                   <div className="mobile-card-detail">
@@ -1112,8 +1324,10 @@ const UserDashboard = () => {
           </div>
         )}
       </div>
+      )}
 
       {/* My Requests */}
+      {activeSection === 'my-requests' && (
       <div className="card mb-4">
         <div className="card-header" style={{
           backgroundColor: '#f8fafc',
@@ -1140,28 +1354,28 @@ const UserDashboard = () => {
         </div>
         {requestsData?.length > 0 ? (
           <>
-            <div className="table-responsive">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Record</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Response</th>
+          <div className="table-responsive">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Record</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Response</th>
                     <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+                </tr>
+              </thead>
+              <tbody>
                   {requestsData
                   .slice((myRequestsCurrentPage - 1) * myRequestsPerPage, myRequestsCurrentPage * myRequestsPerPage)
                   .map(request => (
-                    <tr key={request._id}>
-                      <td>{request.record?.title}</td>
-                      <td>{request.requestType}</td>
-                      <td>{getStatusBadge(request.status)}</td>
-                      <td>{new Date(request.createdAt).toLocaleDateString()}</td>
-                      <td>{request.adminResponse || '-'}</td>
+                  <tr key={request._id}>
+                    <td>{request.record?.title}</td>
+                    <td>{request.requestType}</td>
+                    <td>{getStatusBadge(request.status)}</td>
+                    <td>{new Date(request.createdAt).toLocaleDateString()}</td>
+                    <td>{request.adminResponse || '-'}</td>
                       <td>
                         {request.status === 'awaiting_confirmation' && (
                           <button
@@ -1197,11 +1411,11 @@ const UserDashboard = () => {
                           </button>
                         )}
                       </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
             {/* Mobile Card View for My Requests */}
             <div className="mobile-card-view" style={{ display: 'none' }}>
@@ -1431,8 +1645,10 @@ const UserDashboard = () => {
           <p className="text-center">No requests submitted</p>
         )}
       </div>
+      )}
 
       {/* Requests to Me */}
+      {activeSection === 'requests-to-me' && (
       <div className="card mb-4">
         <div className="card-header" style={{
           backgroundColor: '#f8fafc',
@@ -1459,97 +1675,97 @@ const UserDashboard = () => {
         </div>
         {requestsToMeData?.length > 0 ? (
           <>
-            <div className="table-responsive">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Record</th>
-                    <th>Message</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+          <div className="table-responsive">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Record</th>
+                  <th>Message</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                   {requestsToMeData
                     .slice((requestsToMeCurrentPage - 1) * requestsToMePerPage, requestsToMeCurrentPage * requestsToMePerPage)
                     .map(request => (
-                    <tr key={request._id}>
-                      <td>{request.user?.name}</td>
-                      <td>{request.record?.title}</td>
-                      <td>{request.message || '-'}</td>
-                      <td>{new Date(request.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button
-                            style={{
-                              backgroundColor: '#10b981',
-                              color: 'white',
-                              padding: '8px 12px',
-                              borderRadius: '6px',
-                              border: 'none',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                            }}
-                            onClick={() => handleApproveRequest(request._id)}
-                            onMouseOver={(e) => {
-                              e.target.style.backgroundColor = '#059669'
-                              e.target.style.transform = 'translateY(-1px)'
-                              e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.backgroundColor = '#10b981'
-                              e.target.style.transform = 'translateY(0)'
-                              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                            }}
-                          >
-                            <FiPlus size={14} />
-                            Approve
-                          </button>
-                          <button
-                            style={{
-                              backgroundColor: '#ef4444',
-                              color: 'white',
-                              padding: '8px 12px',
-                              borderRadius: '6px',
-                              border: 'none',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                            }}
-                            onClick={() => handleRejectRequest(request._id)}
-                            onMouseOver={(e) => {
-                              e.target.style.backgroundColor = '#dc2626'
-                              e.target.style.transform = 'translateY(-1px)'
-                              e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)'
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.backgroundColor = '#ef4444'
-                              e.target.style.transform = 'translateY(0)'
-                              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                            }}
-                          >
-                            <FiX size={14} />
-                            Reject
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  <tr key={request._id}>
+                    <td>{request.user?.name}</td>
+                    <td>{request.record?.title}</td>
+                    <td>{request.message || '-'}</td>
+                    <td>{new Date(request.createdAt).toLocaleDateString()}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          style={{
+                            backgroundColor: '#10b981',
+                            color: 'white',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                          }}
+                          onClick={() => handleApproveRequest(request._id)}
+                          onMouseOver={(e) => {
+                            e.target.style.backgroundColor = '#059669'
+                            e.target.style.transform = 'translateY(-1px)'
+                            e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.backgroundColor = '#10b981'
+                            e.target.style.transform = 'translateY(0)'
+                            e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                          }}
+                        >
+                          <FiPlus size={14} />
+                          Approve
+                        </button>
+                        <button
+                          style={{
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                          }}
+                          onClick={() => handleRejectRequest(request._id)}
+                          onMouseOver={(e) => {
+                            e.target.style.backgroundColor = '#dc2626'
+                            e.target.style.transform = 'translateY(-1px)'
+                            e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)'
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.backgroundColor = '#ef4444'
+                            e.target.style.transform = 'translateY(0)'
+                            e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                          }}
+                        >
+                          <FiX size={14} />
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
             {/* Mobile Card View for Requests to Me */}
             <div className="mobile-card-view" style={{ display: 'none' }}>
@@ -1568,8 +1784,8 @@ const UserDashboard = () => {
                         Request from {request.user?.name}
                       </span>
                     </div>
-                  </div>
-                  
+      </div>
+
                   <div className="mobile-card-details">
                     <div className="mobile-card-detail">
                       <div className="mobile-card-label">User</div>
@@ -1650,27 +1866,27 @@ const UserDashboard = () => {
 
                 {/* Pagination info */}
                 <div style={{ 
-                  fontSize: '14px', 
-                  color: '#6b7280',
+            fontSize: '14px',
+            color: '#6b7280',
                   fontWeight: '500'
-                }}>
+          }}>
                   Showing {((requestsToMeCurrentPage - 1) * requestsToMePerPage) + 1} to {Math.min(requestsToMeCurrentPage * requestsToMePerPage, requestsToMeData?.length || 0)} of {requestsToMeData?.length || 0} records
-                </div>
+        </div>
 
                 {/* Pagination buttons */}
                 <div className="pagination-buttons" style={{ display: 'flex', gap: '8px' }}>
-                  <button
+                        <button
                     onClick={() => setRequestsToMeCurrentPage(1)}
                     disabled={requestsToMeCurrentPage === 1}
-                    style={{
-                      padding: '8px 12px',
+                          style={{
+                            padding: '8px 12px',
                       border: '1px solid #d1d5db',
-                      borderRadius: '6px',
+                            borderRadius: '6px',
                       backgroundColor: requestsToMeCurrentPage === 1 ? '#f3f4f6' : 'white',
                       color: requestsToMeCurrentPage === 1 ? '#9ca3af' : '#374151',
                       cursor: requestsToMeCurrentPage === 1 ? 'not-allowed' : 'pointer',
                       fontSize: '14px',
-                      fontWeight: '500',
+                            fontWeight: '500',
                       transition: 'all 0.2s ease'
                     }}
                   >
@@ -1711,7 +1927,7 @@ const UserDashboard = () => {
                           borderRadius: '6px',
                           backgroundColor: requestsToMeCurrentPage === pageNum ? '#3b82f6' : 'white',
                           color: requestsToMeCurrentPage === pageNum ? 'white' : '#374151',
-                          cursor: 'pointer',
+                            cursor: 'pointer',
                           fontSize: '14px',
                           fontWeight: '500',
                           transition: 'all 0.2s ease'
@@ -1755,8 +1971,8 @@ const UserDashboard = () => {
                     }}
                   >
                     Last
-                  </button>
-                </div>
+                        </button>
+          </div>
               </div>
             )}
           </>
@@ -1764,6 +1980,7 @@ const UserDashboard = () => {
           <p className="text-center">No requests for your records</p>
         )}
       </div>
+      )}
 
       {/* Return Confirmation Modal */}
       <SimpleModal
@@ -2165,6 +2382,52 @@ const UserDashboard = () => {
           background: #dbeafe;
           color: #1e40af;
         }
+        /* Stats Grid Responsive Styles */
+        @media (max-width: 768px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 16px !important;
+            margin-bottom: 24px !important;
+          }
+          
+          .stat-card {
+            padding: 16px !important;
+          }
+          
+          .stat-card div:first-child {
+            margin-bottom: 8px !important;
+          }
+          
+          .stat-card div:first-child div:first-child {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          
+          .stat-card div:first-child div:last-child {
+            font-size: 20px !important;
+          }
+          
+          .stat-card div:nth-child(2) {
+            font-size: 14px !important;
+            margin-bottom: 2px !important;
+          }
+          
+          .stat-card div:last-child {
+            font-size: 12px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          
+          .stat-card {
+            padding: 12px !important;
+          }
+        }
+
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {
           .search-container {
