@@ -23,15 +23,22 @@ router.get('/test', recordManagerAuth, async (req, res) => {
 // @access  Private (Record Manager)
 router.get('/requests', recordManagerAuth, async (req, res) => {
   try {
+    const { status } = req.query;
+    
     // Only show requests that are meant for record managers (no targetUser or targetUser is null)
-    const requests = await Request.find({ 
+    const baseFilter = { 
       $or: [
         { targetUser: null },
         { targetUser: { $exists: false } }
       ]
-    })
+    };
+    
+    // Add status filter if provided
+    const query = status ? { ...baseFilter, status } : baseFilter;
+    
+    const requests = await Request.find(query)
       .populate('user', 'name email')
-      .populate('record', 'title category status fileId')
+      .populate('record', 'title category status fileId employeeId ppoUniqueId branchCode')
       .populate('processedBy', 'name')
       .sort({ createdAt: -1 });
     
@@ -123,18 +130,23 @@ router.get('/dashboard', recordManagerAuth, async (req, res) => {
     });
     const approvedRequests = await Request.countDocuments({ 
       ...recordManagerRequestFilter,
-      status: 'approved' 
+      status: 'handed_over' 
     });
-    const rejectedRequests = await Request.countDocuments({ 
+    const searchingRequests = await Request.countDocuments({ 
       ...recordManagerRequestFilter,
-      status: 'rejected' 
+      status: 'searching' 
+    });
+    const notTraceableRequests = await Request.countDocuments({ 
+      ...recordManagerRequestFilter,
+      status: 'not_traceable' 
     });
 
     res.json({
       totalRequests,
       pendingRequests,
       approvedRequests,
-      rejectedRequests
+      searchingRequests,
+      notTraceableRequests
     });
   } catch (error) {
     console.error(error.message);

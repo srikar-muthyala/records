@@ -53,7 +53,7 @@ router.get('/debug-fields', async (req, res) => {
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', category = '' } = req.query;
+    const { page = 1, limit = 10, search = '', category = '', status = '' } = req.query;
     
     const query = {};
     if (search) {
@@ -74,10 +74,13 @@ router.get('/', async (req, res) => {
     if (category) {
       query.category = category;
     }
-
-    // Add status filter to reduce scanned documents
-    if (!query.status) {
-      query.status = { $in: ['available', 'borrowed'] };
+    if (status) {
+      query.status = status;
+    } else {
+      // Add status filter to reduce scanned documents
+      if (!query.status) {
+        query.status = { $in: ['available', 'borrowed'] };
+      }
     }
 
     const records = await Record.find(query)

@@ -16,6 +16,7 @@ const RecordManagerDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   
   // Pagination for Record Requests
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1)
@@ -34,6 +35,13 @@ const RecordManagerDashboard = () => {
     setCurrentPage(1)
   }
 
+  // Handle status card click
+  const handleStatusCardClick = (status) => {
+    setStatusFilter(status)
+    setActiveTab('requests')
+    setRequestsCurrentPage(1) // Reset to first page
+  }
+
   // Dashboard stats
   const { data: dashboardData, isLoading: dashboardLoading, refetch: refetchDashboard } = useQuery(
     'recordManagerDashboard',
@@ -45,8 +53,14 @@ const RecordManagerDashboard = () => {
 
   // Requests
   const { data: requestsData, isLoading: requestsLoading, refetch: refetchRequests } = useQuery(
-    'recordManagerRequests',
-    () => axios.get('/api/record-manager/requests'),
+    ['recordManagerRequests', statusFilter],
+    () => {
+      const params = new URLSearchParams();
+      if (statusFilter) {
+        params.append('status', statusFilter);
+      }
+      return axios.get(`/api/record-manager/requests?${params.toString()}`);
+    },
     {
       select: (data) => data.data
     }
@@ -698,27 +712,35 @@ padding: 8px 12px;
             <div className="stats-grid">
               <div 
                 className="stat-card"
-                onClick={() => setActiveTab('requests')}
-                style={{ borderColor: '#3b82f6' }}
-              >
-                <div className="stat-number" style={{ color: '#3b82f6' }}>{dashboardData?.totalRequests || 0}</div>
-                <div className="stat-label">Total Requests</div>
-              </div>
-              <div 
-                className="stat-card"
-                onClick={() => setActiveTab('requests')}
+                onClick={() => handleStatusCardClick('pending')}
                 style={{ borderColor: '#f59e0b' }}
               >
                 <div className="stat-number" style={{ color: '#f59e0b' }}>{dashboardData?.pendingRequests || 0}</div>
-                <div className="stat-label">Pending Requests</div>
+                <div className="stat-label">Pending Records</div>
               </div>
               <div 
                 className="stat-card"
-                onClick={() => setActiveTab('requests')}
+                onClick={() => handleStatusCardClick('handed_over')}
                 style={{ borderColor: '#10b981' }}
               >
                 <div className="stat-number" style={{ color: '#10b981' }}>{dashboardData?.approvedRequests || 0}</div>
-                <div className="stat-label">Handed Over Requests</div>
+                <div className="stat-label">Handed Over Records</div>
+              </div>
+              <div 
+                className="stat-card"
+                onClick={() => handleStatusCardClick('searching')}
+                style={{ borderColor: '#3b82f6' }}
+              >
+                <div className="stat-number" style={{ color: '#3b82f6' }}>{dashboardData?.searchingRequests || 0}</div>
+                <div className="stat-label">Searching Records</div>
+              </div>
+              <div 
+                className="stat-card"
+                onClick={() => handleStatusCardClick('not_traceable')}
+                style={{ borderColor: '#6b7280' }}
+              >
+                <div className="stat-number" style={{ color: '#6b7280' }}>{dashboardData?.notTraceableRequests || 0}</div>
+                <div className="stat-label">Not Traceable Records</div>
               </div>
             </div>
 
@@ -1104,7 +1126,45 @@ padding: 8px 12px;
         {activeTab === 'requests' && (
           <div className="content-card">
             <div className="content-header">
-              <h2 className="content-title">Record Requests</h2>
+              <div>
+                <h2 className="content-title">Record Requests</h2>
+                {statusFilter && (
+                  <div style={{ 
+                    marginTop: '8px', 
+                    padding: '8px 12px', 
+                    backgroundColor: '#f3f4f6', 
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    color: '#374151',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span>Filtered by status: <strong>{statusFilter.replace('_', ' ')}</strong></span>
+                    <button
+                      onClick={() => setStatusFilter('')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#6b7280',
+                        cursor: 'pointer',
+                        padding: '2px',
+                        borderRadius: '4px'
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.backgroundColor = '#e5e7eb'
+                        e.target.style.color = '#374151'
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.backgroundColor = 'transparent'
+                        e.target.style.color = '#6b7280'
+                      }}
+                    >
+                      <FiX size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="action-buttons">
                 <button 
                   className="action-button primary"
@@ -1120,7 +1180,9 @@ padding: 8px 12px;
                   <tr>
                     <th>User</th>
                     <th>Record</th>
-                    <th>Category</th>
+                    <th>Account Number</th>
+                    <th>PPO ID</th>
+                    <th>Branch Code</th>
                     <th>File ID</th>
                     <th>Request Date</th>
                     <th>Message</th>
@@ -1135,7 +1197,9 @@ padding: 8px 12px;
                     <tr key={request._id}>
                       <td>{request.user?.name}</td>
                       <td>{request.record?.title}</td>
-                      <td>{request.record?.category}</td>
+                      <td>{request.record?.employeeId || 'N/A'}</td>
+                      <td>{request.record?.ppoUniqueId || 'N/A'}</td>
+                      <td>{request.record?.branchCode || 'N/A'}</td>
                       <td>{request.record?.fileId || 'N/A'}</td>
                       <td>{new Date(request.createdAt).toLocaleDateString()}</td>
                       <td style={{ 
@@ -1194,8 +1258,16 @@ padding: 8px 12px;
                       <div className="mobile-card-value">{request.user?.name}</div>
                     </div>
                     <div className="mobile-card-detail">
-                      <div className="mobile-card-label">Category</div>
-                      <div className="mobile-card-value">{request.record?.category}</div>
+                      <div className="mobile-card-label">Account Number</div>
+                      <div className="mobile-card-value">{request.record?.employeeId || 'N/A'}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">PPO ID</div>
+                      <div className="mobile-card-value">{request.record?.ppoUniqueId || 'N/A'}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Branch Code</div>
+                      <div className="mobile-card-value">{request.record?.branchCode || 'N/A'}</div>
                     </div>
                     <div className="mobile-card-detail">
                       <div className="mobile-card-label">File ID</div>
