@@ -2667,17 +2667,76 @@ const AdminDashboard = () => {
 
             
             
-            <SimpleFormField
-
-              label="New Password"
-
-              name="password"
-
-              type="password"
-
-              placeholder="Leave blank to keep current password"
-
-            />
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#374151', 
+                marginBottom: '8px' 
+              }}>
+                New Password
+              </label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  name="password"
+                  type="password"
+                  placeholder="Leave blank to keep current password"
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3b82f6'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb'
+                    e.target.style.boxShadow = 'none'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const passwordInput = document.querySelector('input[name="password"]')
+                    if (passwordInput) {
+                      passwordInput.value = 'password'
+                      passwordInput.dispatchEvent(new Event('input', { bubbles: true }))
+                    }
+                  }}
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.backgroundColor = '#d97706'
+                    e.target.style.transform = 'translateY(-1px)'
+                    e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)'
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.backgroundColor = '#f59e0b'
+                    e.target.style.transform = 'translateY(0)'
+                    e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
 
             
             
