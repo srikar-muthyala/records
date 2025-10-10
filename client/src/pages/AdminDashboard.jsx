@@ -1162,12 +1162,6 @@ const AdminDashboard = () => {
                   <FiRefreshCw /> Refresh
                 </button>
                 <button 
-                  className="action-button success"
-                  onClick={() => setShowAddRecord(true)}
-                >
-                  <FiPlus /> Add Record
-                </button>
-                <button 
                   className="action-button warning"
                   onClick={() => setShowImportModal(true)}
                 >
@@ -1375,14 +1369,6 @@ const AdminDashboard = () => {
                       borderBottom: '1px solid #e5e7eb',
                       fontSize: '14px'
                     }}>Status</th>
-                    <th style={{
-                      padding: '12px 16px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#374151',
-                      borderBottom: '1px solid #e5e7eb',
-                      fontSize: '14px'
-                      }}>Actions</th>
 
                     </tr>
 
@@ -1539,129 +1525,6 @@ const AdminDashboard = () => {
                           </span>
                         )}
                       </td>
-                      <td style={{
-                        padding: '12px 16px'
-                      }}>
-                        <div className="action-buttons" style={{ display: 'flex', gap: '8px' }}>
-                            <button
-
-                            className="action-button warning"
-                              style={{
-
-                              backgroundColor: '#f59e0b',
-                                color: 'white',
-
-                                padding: '8px 12px',
-
-                                borderRadius: '6px',
-
-                                border: 'none',
-
-                                fontSize: '12px',
-
-                                fontWeight: '500',
-
-                                cursor: 'pointer',
-
-                                transition: 'all 0.3s ease',
-
-                                display: 'flex',
-
-                                alignItems: 'center',
-
-                                gap: '4px',
-
-                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-
-                              }}
-
-                            onClick={() => handleEditRecord(record)}
-                              onMouseOver={(e) => {
-
-                              e.target.style.backgroundColor = '#d97706'
-                                e.target.style.transform = 'translateY(-1px)'
-
-                              e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)'
-                              }}
-
-                              onMouseOut={(e) => {
-
-                              e.target.style.backgroundColor = '#f59e0b'
-                                e.target.style.transform = 'translateY(0)'
-
-                                e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-
-                              }}
-
-                            >
-
-                            <FiEdit size={14} />
-                            Edit
-                            </button>
-
-                            <button
-
-                            className="action-button danger"
-                              style={{
-
-                                backgroundColor: '#ef4444',
-
-                                color: 'white',
-
-                                padding: '8px 12px',
-
-                                borderRadius: '6px',
-
-                                border: 'none',
-
-                                fontSize: '12px',
-
-                                fontWeight: '500',
-
-                                cursor: 'pointer',
-
-                                transition: 'all 0.3s ease',
-
-                                display: 'flex',
-
-                                alignItems: 'center',
-
-                                gap: '4px',
-
-                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-
-                              }}
-
-                            onClick={() => handleDeleteRecord(record._id)}
-                              onMouseOver={(e) => {
-
-                                e.target.style.backgroundColor = '#dc2626'
-
-                                e.target.style.transform = 'translateY(-1px)'
-
-                                e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)'
-
-                              }}
-
-                              onMouseOut={(e) => {
-
-                                e.target.style.backgroundColor = '#ef4444'
-
-                                e.target.style.transform = 'translateY(0)'
-
-                                e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-
-                              }}
-
-                            >
-
-                            <FiTrash2 size={14} />
-                            Delete
-                            </button>
-
-                          </div>
-
-                        </td>
 
                       </tr>
 
@@ -1749,22 +1612,6 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     
-                    <div className="mobile-card-actions">
-                      <button
-                        className="btn btn-warning btn-sm"
-                        onClick={() => handleEditRecord(record)}
-                        style={{ fontSize: '12px', padding: '6px 12px', marginRight: '8px' }}
-                      >
-                        <FiEdit /> Edit
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleDeleteRecord(record._id)}
-                        style={{ fontSize: '12px', padding: '6px 12px' }}
-                      >
-                        <FiTrash2 /> Delete
-                      </button>
-                    </div>
                   </div>
                 ))}
               </div>
@@ -2679,9 +2526,9 @@ const AdminDashboard = () => {
               </label>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <input
-                  name="password"
-                  type="password"
-                  placeholder="Leave blank to keep current password"
+              name="password"
+              type="password"
+              placeholder="Leave blank to keep current password"
                   style={{
                     flex: 1,
                     padding: '12px',

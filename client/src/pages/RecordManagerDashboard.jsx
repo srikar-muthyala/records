@@ -779,9 +779,6 @@ padding: 8px 12px;
                   >
                     <FiRefreshCw /> Refresh
                   </button>
-                  <button className="action-button success">
-                    <FiPlus /> Add Record
-                  </button>
                   <button 
                     className="action-button warning"
                     onClick={() => setShowImportModal(true)}
@@ -912,7 +909,6 @@ padding: 8px 12px;
                       <th>Account Number</th>
                       <th>Pension Status</th>
                       <th>Status</th>
-                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -979,16 +975,6 @@ padding: 8px 12px;
                               {record.status}
                             </span>
                           )}
-                        </td>
-                        <td>
-                          <div className="action-buttons">
-                            <button className="action-button warning">
-                              <FiEdit /> Edit
-                            </button>
-                            <button className="action-button danger">
-                              <FiX /> Delete
-                            </button>
-                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1070,14 +1056,6 @@ padding: 8px 12px;
                       </div>
                     </div>
                     
-                    <div className="mobile-card-actions">
-                      <button className="btn btn-warning btn-sm" style={{ fontSize: '12px', padding: '6px 12px', marginRight: '8px' }}>
-                        <FiEdit /> Edit
-                      </button>
-                      <button className="btn btn-danger btn-sm" style={{ fontSize: '12px', padding: '6px 12px' }}>
-                        <FiX /> Delete
-                      </button>
-                    </div>
                   </div>
                 ))}
               </div>
@@ -1216,6 +1194,7 @@ padding: 8px 12px;
                       <>
                         <th>Return Date</th>
                         <th>File ID</th>
+                        <th>Category</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </>
@@ -1225,6 +1204,7 @@ padding: 8px 12px;
                         <th>PPO ID</th>
                         <th>Branch Code</th>
                         <th>File ID</th>
+                        <th>Category</th>
                         <th>Request Date</th>
                         <th>Message</th>
                         <th>Status</th>
@@ -1244,6 +1224,7 @@ padding: 8px 12px;
                         <>
                           <td>{new Date(request.createdAt).toLocaleDateString()}</td>
                           <td>{request.record?.fileId || 'N/A'}</td>
+                          <td>{request.record?.category || 'N/A'}</td>
                           <td>{getStatusBadge(request.status)}</td>
                         </>
                       ) : (
@@ -1252,6 +1233,7 @@ padding: 8px 12px;
                           <td>{request.record?.ppoUniqueId || 'N/A'}</td>
                           <td>{request.record?.branchCode || 'N/A'}</td>
                           <td>{request.record?.fileId || 'N/A'}</td>
+                          <td>{request.record?.category || 'N/A'}</td>
                           <td>{new Date(request.createdAt).toLocaleDateString()}</td>
                           <td style={{ 
                             maxWidth: '200px', 
@@ -1351,6 +1333,10 @@ padding: 8px 12px;
                           <div className="mobile-card-value">{request.record?.fileId || 'N/A'}</div>
                         </div>
                         <div className="mobile-card-detail">
+                          <div className="mobile-card-label">Category</div>
+                          <div className="mobile-card-value">{request.record?.category || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
                           <div className="mobile-card-label">PPO ID</div>
                           <div className="mobile-card-value">{request.record?.ppoUniqueId || 'N/A'}</div>
                         </div>
@@ -1386,6 +1372,10 @@ padding: 8px 12px;
                         <div className="mobile-card-detail">
                           <div className="mobile-card-label">File ID</div>
                           <div className="mobile-card-value">{request.record?.fileId || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">Category</div>
+                          <div className="mobile-card-value">{request.record?.category || 'N/A'}</div>
                         </div>
                         <div className="mobile-card-detail">
                           <div className="mobile-card-label">PPO ID</div>
