@@ -23,7 +23,7 @@ router.get('/test', recordManagerAuth, async (req, res) => {
 // @access  Private (Record Manager)
 router.get('/requests', recordManagerAuth, async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, requestType } = req.query;
     
     // Only show requests that are meant for record managers (no targetUser or targetUser is null)
     const baseFilter = { 
@@ -34,7 +34,12 @@ router.get('/requests', recordManagerAuth, async (req, res) => {
     };
     
     // Add status filter if provided
-    const query = status ? { ...baseFilter, status } : baseFilter;
+    let query = status ? { ...baseFilter, status } : baseFilter;
+    
+    // Add requestType filter if provided
+    if (requestType) {
+      query = { ...query, requestType };
+    }
     
     const requests = await Request.find(query)
       .populate('user', 'name email')
@@ -171,7 +176,13 @@ router.get('/dashboard', recordManagerAuth, async (req, res) => {
     const totalRequests = await Request.countDocuments(recordManagerRequestFilter);
     const pendingRequests = await Request.countDocuments({ 
       ...recordManagerRequestFilter,
-      status: 'pending' 
+      status: 'pending',
+      requestType: 'borrow'
+    });
+    const returnRequests = await Request.countDocuments({ 
+      ...recordManagerRequestFilter,
+      status: 'pending',
+      requestType: 'return'
     });
     const approvedRequests = await Request.countDocuments({ 
       ...recordManagerRequestFilter,
@@ -189,6 +200,7 @@ router.get('/dashboard', recordManagerAuth, async (req, res) => {
     res.json({
       totalRequests,
       pendingRequests,
+      returnRequests,
       approvedRequests,
       searchingRequests,
       notTraceableRequests

@@ -17,6 +17,7 @@ const RecordManagerDashboard = () => {
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [requestTypeFilter, setRequestTypeFilter] = useState('')
   
   // Pagination for Record Requests
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1)
@@ -36,8 +37,9 @@ const RecordManagerDashboard = () => {
   }
 
   // Handle status card click
-  const handleStatusCardClick = (status) => {
+  const handleStatusCardClick = (status, requestType = null) => {
     setStatusFilter(status)
+    setRequestTypeFilter(requestType || '')
     setActiveTab('requests')
     setRequestsCurrentPage(1) // Reset to first page
   }
@@ -53,11 +55,14 @@ const RecordManagerDashboard = () => {
 
   // Requests
   const { data: requestsData, isLoading: requestsLoading, refetch: refetchRequests } = useQuery(
-    ['recordManagerRequests', statusFilter],
+    ['recordManagerRequests', statusFilter, requestTypeFilter],
     () => {
       const params = new URLSearchParams();
       if (statusFilter) {
         params.append('status', statusFilter);
+      }
+      if (requestTypeFilter) {
+        params.append('requestType', requestTypeFilter);
       }
       return axios.get(`/api/record-manager/requests?${params.toString()}`);
     },
@@ -724,11 +729,19 @@ padding: 8px 12px;
             <div className="stats-grid">
               <div 
                 className="stat-card"
-                onClick={() => handleStatusCardClick('pending')}
+                onClick={() => handleStatusCardClick('pending', 'borrow')}
                 style={{ borderColor: '#f59e0b' }}
               >
                 <div className="stat-number" style={{ color: '#f59e0b' }}>{dashboardData?.pendingRequests || 0}</div>
-                <div className="stat-label">Pending Records</div>
+                <div className="stat-label">Pending Requests</div>
+              </div>
+              <div 
+                className="stat-card"
+                onClick={() => handleStatusCardClick('pending', 'return')}
+                style={{ borderColor: '#8b5cf6' }}
+              >
+                <div className="stat-number" style={{ color: '#8b5cf6' }}>{dashboardData?.returnRequests || 0}</div>
+                <div className="stat-label">Return Requests</div>
               </div>
               <div 
                 className="stat-card"
@@ -1140,7 +1153,7 @@ padding: 8px 12px;
             <div className="content-header">
               <div>
                 <h2 className="content-title">Record Requests</h2>
-                {statusFilter && (
+                {(statusFilter || requestTypeFilter) && (
                   <div style={{ 
                     marginTop: '8px', 
                     padding: '8px 12px', 
@@ -1152,9 +1165,16 @@ padding: 8px 12px;
                     alignItems: 'center',
                     gap: '8px'
                   }}>
-                    <span>Filtered by status: <strong>{statusFilter.replace('_', ' ')}</strong></span>
+                    <span>
+                      Filtered by: 
+                      {statusFilter && <strong> {statusFilter.replace('_', ' ')}</strong>}
+                      {requestTypeFilter && <strong> {requestTypeFilter} requests</strong>}
+                    </span>
                     <button
-                      onClick={() => setStatusFilter('')}
+                      onClick={() => {
+                        setStatusFilter('')
+                        setRequestTypeFilter('')
+                      }}
                       style={{
                         background: 'none',
                         border: 'none',
@@ -1192,14 +1212,25 @@ padding: 8px 12px;
                   <tr>
                     <th>User</th>
                     <th>Record</th>
-                    <th>Account Number</th>
-                    <th>PPO ID</th>
-                    <th>Branch Code</th>
-                    <th>File ID</th>
-                    <th>Request Date</th>
-                    <th>Message</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    {requestTypeFilter === 'return' ? (
+                      <>
+                        <th>Return Date</th>
+                        <th>File ID</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </>
+                    ) : (
+                      <>
+                        <th>Account Number</th>
+                        <th>PPO ID</th>
+                        <th>Branch Code</th>
+                        <th>File ID</th>
+                        <th>Request Date</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -1209,20 +1240,30 @@ padding: 8px 12px;
                     <tr key={request._id}>
                       <td>{request.user?.name}</td>
                       <td>{request.record?.title}</td>
-                      <td>{request.record?.employeeId || 'N/A'}</td>
-                      <td>{request.record?.ppoUniqueId || 'N/A'}</td>
-                      <td>{request.record?.branchCode || 'N/A'}</td>
-                      <td>{request.record?.fileId || 'N/A'}</td>
-                      <td>{new Date(request.createdAt).toLocaleDateString()}</td>
-                      <td style={{ 
-                        maxWidth: '200px', 
-                        wordWrap: 'break-word',
-                        fontSize: '13px',
-                        color: '#374151'
-                      }}>
-                        {request.message || '-'}
-                      </td>
-                      <td>{getStatusBadge(request.status)}</td>
+                      {requestTypeFilter === 'return' ? (
+                        <>
+                          <td>{new Date(request.createdAt).toLocaleDateString()}</td>
+                          <td>{request.record?.fileId || 'N/A'}</td>
+                          <td>{getStatusBadge(request.status)}</td>
+                        </>
+                      ) : (
+                        <>
+                          <td>{request.record?.employeeId || 'N/A'}</td>
+                          <td>{request.record?.ppoUniqueId || 'N/A'}</td>
+                          <td>{request.record?.branchCode || 'N/A'}</td>
+                          <td>{request.record?.fileId || 'N/A'}</td>
+                          <td>{new Date(request.createdAt).toLocaleDateString()}</td>
+                          <td style={{ 
+                            maxWidth: '200px', 
+                            wordWrap: 'break-word',
+                            fontSize: '13px',
+                            color: '#374151'
+                          }}>
+                            {request.message || '-'}
+                          </td>
+                          <td>{getStatusBadge(request.status)}</td>
+                        </>
+                      )}
                       <td>
                         <div className="action-buttons" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           {request.requestType === 'return' && request.status === 'pending' ? (
@@ -1292,47 +1333,88 @@ padding: 8px 12px;
                 ?.map(request => (
                 <div key={request._id} className="mobile-card">
                   <div className="mobile-card-header">
-                    <h4 className="mobile-card-title">{request.record?.title}</h4>
+                    <h4 className="mobile-card-title">{request.record?.employeeId || 'N/A'}</h4>
                     <div className="mobile-card-status">
                       {getStatusBadge(request.status)}
                     </div>
                   </div>
                   
                   <div className="mobile-card-details">
-                    <div className="mobile-card-detail">
-                      <div className="mobile-card-label">User</div>
-                      <div className="mobile-card-value">{request.user?.name}</div>
-                    </div>
-                    <div className="mobile-card-detail">
-                      <div className="mobile-card-label">Account Number</div>
-                      <div className="mobile-card-value">{request.record?.employeeId || 'N/A'}</div>
-                    </div>
-                    <div className="mobile-card-detail">
-                      <div className="mobile-card-label">PPO ID</div>
-                      <div className="mobile-card-value">{request.record?.ppoUniqueId || 'N/A'}</div>
-                    </div>
-                    <div className="mobile-card-detail">
-                      <div className="mobile-card-label">Branch Code</div>
-                      <div className="mobile-card-value">{request.record?.branchCode || 'N/A'}</div>
-                    </div>
-                    <div className="mobile-card-detail">
-                      <div className="mobile-card-label">File ID</div>
-                      <div className="mobile-card-value">{request.record?.fileId || 'N/A'}</div>
-                    </div>
-                    <div className="mobile-card-detail">
-                      <div className="mobile-card-label">Request Date</div>
-                      <div className="mobile-card-value">{new Date(request.createdAt).toLocaleDateString()}</div>
-                    </div>
-                    <div className="mobile-card-detail" style={{ gridColumn: '1 / -1' }}>
-                      <div className="mobile-card-label">Message</div>
-                      <div className="mobile-card-value" style={{ 
-                        fontSize: '12px',
-                        color: '#6b7280',
-                        fontStyle: request.message ? 'normal' : 'italic'
-                      }}>
-                        {request.message || 'No message provided'}
-                      </div>
-                    </div>
+                    {requestTypeFilter === 'return' ? (
+                      <>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">Branch Code</div>
+                          <div className="mobile-card-value">{request.record?.branchCode || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">File ID</div>
+                          <div className="mobile-card-value">{request.record?.fileId || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">PPO ID</div>
+                          <div className="mobile-card-value">{request.record?.ppoUniqueId || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">Name</div>
+                          <div className="mobile-card-value">{request.record?.name || request.record?.title || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">User</div>
+                          <div className="mobile-card-value">{request.user?.name}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">Return Date</div>
+                          <div className="mobile-card-value">{new Date(request.createdAt).toLocaleDateString()}</div>
+                        </div>
+                        <div className="mobile-card-detail" style={{ gridColumn: '1 / -1' }}>
+                          <div className="mobile-card-label">Message</div>
+                          <div className="mobile-card-value" style={{ 
+                            fontSize: '12px',
+                            color: '#6b7280',
+                            fontStyle: request.message ? 'normal' : 'italic'
+                          }}>
+                            {request.message || 'No message provided'}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">Branch Code</div>
+                          <div className="mobile-card-value">{request.record?.branchCode || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">File ID</div>
+                          <div className="mobile-card-value">{request.record?.fileId || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">PPO ID</div>
+                          <div className="mobile-card-value">{request.record?.ppoUniqueId || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">Name</div>
+                          <div className="mobile-card-value">{request.record?.name || request.record?.title || 'N/A'}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">User</div>
+                          <div className="mobile-card-value">{request.user?.name}</div>
+                        </div>
+                        <div className="mobile-card-detail">
+                          <div className="mobile-card-label">Request Date</div>
+                          <div className="mobile-card-value">{new Date(request.createdAt).toLocaleDateString()}</div>
+                        </div>
+                        <div className="mobile-card-detail" style={{ gridColumn: '1 / -1' }}>
+                          <div className="mobile-card-label">Message</div>
+                          <div className="mobile-card-value" style={{ 
+                            fontSize: '12px',
+                            color: '#6b7280',
+                            fontStyle: request.message ? 'normal' : 'italic'
+                          }}>
+                            {request.message || 'No message provided'}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                   
                   <div className="mobile-card-actions">

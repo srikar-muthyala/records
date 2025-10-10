@@ -67,7 +67,7 @@ router.post('/users', adminAuth, [
 router.put('/users/:id', adminAuth, [
   body('name').optional().notEmpty().withMessage('Name cannot be empty'),
   body('email').optional().isEmail().withMessage('Please include a valid email'),
-  body('role').optional().isIn(['admin', 'user']).withMessage('Role must be admin or user'),
+  body('role').optional().isIn(['admin', 'recordManager', 'user']).withMessage('Role must be admin, recordManager, or user'),
   body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ], async (req, res) => {
   try {
