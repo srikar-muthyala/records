@@ -1,7 +1,9 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 const Record = require('../models/Record');
 const Request = require('../models/Request');
+const User = require('../models/User');
 const { recordManagerAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -248,6 +250,88 @@ router.post('/records', recordManagerAuth, [
       message: 'Record created successfully',
       record
     });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET /api/record-manager/users
+// @desc    Get regular users (excluding admin and record manager) with their record possession counts
+// @access  Private (Record Manager)
+router.get('/users', recordManagerAuth, async (req, res) => {
+  try {
+    // Get only regular users (exclude admin and record manager)
+    const users = await User.find(
+      { role: 'user' }, 
+      'name email role isActive lastActivity'
+    ).sort({ name: 1 });
+
+    // Debug: Check if there are any borrowed records at all
+    const totalBorrowedRecords = await Record.countDocuments({ status: 'borrowed' });
+    console.log(`Total borrowed records in system: ${totalBorrowedRecords}`);
+    
+    if (totalBorrowedRecords > 0) {
+      const sampleBorrowedRecords = await Record.find({ status: 'borrowed' }).limit(3).select('title currentHolder');
+      console.log('Sample borrowed records:', sampleBorrowedRecords);
+    }
+
+
+    // Get record possession counts for each user
+    const usersWithCounts = await Promise.all(
+      users.map(async (user) => {
+        // Count records currently borrowed by this user
+        const recordsInPossession = await Record.countDocuments({
+          status: 'borrowed',
+          currentHolder: user._id
+        });
+
+
+        return {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isActive: user.isActive,
+          lastActivity: user.lastActivity,
+          recordsInPossession
+        };
+      })
+    );
+
+    res.json(usersWithCounts);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET /api/record-manager/users/:userId/records
+// @desc    Get records borrowed by a specific user
+// @access  Private (Record Manager)
+router.get('/users/:userId/records', recordManagerAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Verify the user exists and is a regular user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.role !== 'user') {
+      return res.status(403).json({ message: 'Access denied. Only regular users can be viewed.' });
+    }
+
+    // Get records borrowed by this user
+           const records = await Record.find({
+             status: 'borrowed',
+             currentHolder: userId
+           })
+           .select('title name category employeeId ppoUniqueId branchCode fileId borrowedDate')
+           .sort({ borrowedDate: -1 });
+
+    res.json(records);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });

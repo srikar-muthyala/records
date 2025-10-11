@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useQuery } from 'react-query'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FiUsers, FiBook, FiClock, FiX, FiPlus, FiRefreshCw, FiEdit, FiUpload } from 'react-icons/fi'
+import { FiUsers, FiBook, FiClock, FiX, FiPlus, FiRefreshCw, FiEdit, FiUpload, FiUser } from 'react-icons/fi'
 import SimpleModal from '../components/SimpleModal'
 
 const RecordManagerDashboard = () => {
@@ -18,6 +18,8 @@ const RecordManagerDashboard = () => {
   const [selectedStatus, setSelectedStatus] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [requestTypeFilter, setRequestTypeFilter] = useState('')
+  const [showUserRecordsModal, setShowUserRecordsModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
   
   // Pagination for Record Requests
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1)
@@ -89,11 +91,35 @@ const RecordManagerDashboard = () => {
     }
   )
 
+  // Users with record counts
+  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery(
+    'recordManagerUsers',
+    () => axios.get('/api/record-manager/users'),
+    {
+      select: (data) => data.data
+    }
+  )
+
+  // User records query
+  const { data: userRecordsData, isLoading: userRecordsLoading, refetch: refetchUserRecords } = useQuery(
+    ['userRecords', selectedUser?._id],
+    () => axios.get(`/api/record-manager/users/${selectedUser._id}/records`),
+    {
+      select: (data) => data.data,
+      enabled: !!selectedUser
+    }
+  )
+
 
   const handleStatusChange = (request, newStatus) => {
     setSelectedRequest(request)
     setSelectedStatus(newStatus)
     setShowStatusModal(true)
+  }
+
+  const handleUserClick = (user) => {
+    setSelectedUser(user)
+    setShowUserRecordsModal(true)
   }
 
   const confirmStatusUpdate = async () => {
@@ -582,6 +608,50 @@ padding: 8px 12px;
             padding: 3px 6px !important;
           }
 
+          /* Users table mobile styles */
+          .users-table .data-table th,
+          .users-table .data-table td {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+          }
+
+          .users-table .data-table th {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            background-color: #f8fafc !important;
+            border-bottom: 2px solid #e5e7eb !important;
+          }
+
+          .users-table .data-table td {
+            vertical-align: middle !important;
+            border-bottom: 1px solid #f3f4f6 !important;
+          }
+
+          /* Users table mobile responsive */
+          @media (max-width: 768px) {
+            .users-table .data-table {
+              min-width: 400px !important;
+            }
+          }
+
+          /* User Records Modal Mobile Styles */
+          @media (max-width: 768px) {
+            .table-container {
+              display: none !important;
+            }
+            
+            .mobile-records-view {
+              display: block !important;
+            }
+          }
+
+          @media (min-width: 769px) {
+            .mobile-records-view {
+              display: none !important;
+            }
+          }
+
           /* Card layout for very small screens */
           @media (max-width: 480px) {
             .table-container {
@@ -721,6 +791,12 @@ padding: 8px 12px;
             onClick={() => setActiveTab('requests')}
           >
             <FiClock /> Requests
+          </button>
+          <button 
+            className={`nav-button ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => setActiveTab('users')}
+          >
+            <FiUser /> Users
           </button>
         </div>
 
@@ -1626,7 +1702,154 @@ padding: 8px 12px;
           </div>
         )}
 
+        {activeTab === 'users' && (
+          <div className="content-card">
+            <div className="content-header">
+              <div>
+                <h2 className="content-title">Users & Record Possession</h2>
+                <p style={{ 
+                  margin: '4px 0 0 0', 
+                  color: '#6b7280', 
+                  fontSize: '14px' 
+                }}>
+                  View regular users and the number of records they currently have borrowed
+                </p>
+              </div>
+              <div className="action-buttons">
+                <button 
+                  className="action-button primary"
+                  onClick={() => refetchUsers()}
+                >
+                  <FiRefreshCw /> Refresh
+                </button>
+              </div>
+            </div>
+            
+            <div className="table-container users-table">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>User Name</th>
+                    <th>Email</th>
+                    <th>Records in Possession</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usersData?.map(user => (
+                    <tr 
+                      key={user._id}
+                      onClick={() => handleUserClick(user)}
+                      style={{ 
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f9fafb'
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }}
+                    >
+                      <td style={{ fontWeight: '500' }}>{user.name}</td>
+                      <td>{user.email}</td>
+                      <td>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '8px' 
+                        }}>
+                          <span style={{ 
+                            fontSize: '18px', 
+                            fontWeight: '700', 
+                            color: user.recordsInPossession > 0 ? '#3b82f6' : '#6b7280' 
+                          }}>
+                            {user.recordsInPossession || 0}
+                          </span>
+                          {user.recordsInPossession > 0 && (
+                            <span style={{ 
+                              fontSize: '12px', 
+                              color: '#6b7280',
+                              backgroundColor: '#f3f4f6',
+                              padding: '2px 6px',
+                              borderRadius: '4px'
+                            }}>
+                              record{user.recordsInPossession !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
+            {/* Mobile Card View for Users */}
+            <div className="mobile-card-view" style={{ display: 'none' }}>
+              {usersData?.map(user => (
+                <div 
+                  key={user._id} 
+                  className="mobile-card"
+                  onClick={() => handleUserClick(user)}
+                  style={{ 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f9fafb'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  <div className="mobile-card-header">
+                    <h4 className="mobile-card-title">{user.name}</h4>
+                  </div>
+                  
+                  <div className="mobile-card-details">
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Email</div>
+                      <div className="mobile-card-value">{user.email}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Records in Possession</div>
+                      <div className="mobile-card-value">
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '6px' 
+                        }}>
+                          <span style={{ 
+                            fontSize: '16px', 
+                            fontWeight: '700', 
+                            color: user.recordsInPossession > 0 ? '#3b82f6' : '#6b7280' 
+                          }}>
+                            {user.recordsInPossession || 0}
+                          </span>
+                          {user.recordsInPossession > 0 && (
+                            <span style={{ 
+                              fontSize: '10px', 
+                              color: '#6b7280',
+                              backgroundColor: '#f3f4f6',
+                              padding: '1px 4px',
+                              borderRadius: '3px'
+                            }}>
+                              record{user.recordsInPossession !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Status Confirmation Modal */}
         <SimpleModal
@@ -1839,11 +2062,242 @@ padding: 8px 12px;
                 Cancel
               </button>
             </div>
-          </form>
-        </SimpleModal>
-      </div>
+        </form>
+      </SimpleModal>
+
+      {/* User Records Modal */}
+      <SimpleModal
+        isOpen={showUserRecordsModal}
+        onClose={() => {
+          setShowUserRecordsModal(false)
+          setSelectedUser(null)
+        }}
+        title={`Records for ${selectedUser?.name || 'User'}`}
+      >
+        {selectedUser && (
+          <div>
+            <div style={{ 
+              marginBottom: '20px', 
+              padding: '16px', 
+              backgroundColor: '#f8fafc', 
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <h4 style={{ margin: '0 0 8px 0', color: '#1f2937', fontSize: '16px' }}>
+                {selectedUser.name}
+              </h4>
+              <p style={{ margin: '0', color: '#6b7280', fontSize: '14px' }}>
+                {selectedUser.email}
+              </p>
+              <p style={{ margin: '8px 0 0 0', color: '#374151', fontSize: '14px', fontWeight: '500' }}>
+                Total Records: {selectedUser.recordsInPossession || 0}
+              </p>
+            </div>
+
+            {userRecordsLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <div>Loading records...</div>
+              </div>
+            ) : userRecordsData?.length > 0 ? (
+              <>
+                 {/* Desktop Table View */}
+                 <div className="table-container" style={{ display: 'block' }}>
+                   <table className="data-table">
+                     <thead>
+                       <tr>
+                         <th>Record Title</th>
+                         <th>Category</th>
+                         <th>Account Number</th>
+                         <th>PPO ID</th>
+                         <th>Branch Code</th>
+                         <th>File ID</th>
+                         <th>Borrowed Date</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {userRecordsData.map(record => (
+                         <tr key={record._id}>
+                           <td style={{ fontWeight: '500' }}>{record.name || record.title}</td>
+                           <td>{record.category}</td>
+                           <td>{record.employeeId || 'N/A'}</td>
+                           <td>{record.ppoUniqueId || 'N/A'}</td>
+                           <td>{record.branchCode || 'N/A'}</td>
+                           <td>{record.fileId || 'N/A'}</td>
+                           <td style={{ color: '#6b7280', fontSize: '13px' }}>
+                             {record.borrowedDate ? new Date(record.borrowedDate).toLocaleDateString() : 'N/A'}
+                           </td>
+                         </tr>
+                       ))}
+                     </tbody>
+                   </table>
+                 </div>
+
+                {/* Mobile Card View */}
+                <div className="mobile-records-view" style={{ display: 'none' }}>
+                  {userRecordsData.map(record => (
+                    <div key={record._id} className="mobile-record-card" style={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      marginBottom: '12px',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                    }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'flex-start',
+                        marginBottom: '12px'
+                      }}>
+                        <h5 style={{ 
+                          margin: '0', 
+                          fontSize: '16px', 
+                          fontWeight: '600', 
+                          color: '#1f2937' 
+                        }}>
+                          {record.name || record.title}
+                        </h5>
+                        <span style={{
+                          fontSize: '12px',
+                          color: '#6b7280',
+                          backgroundColor: '#f3f4f6',
+                          padding: '4px 8px',
+                          borderRadius: '4px'
+                        }}>
+                          {record.category}
+                        </span>
+                      </div>
+                      
+                       <div style={{ 
+                         display: 'grid', 
+                         gridTemplateColumns: '1fr 1fr', 
+                         gap: '8px',
+                         fontSize: '14px'
+                       }}>
+                         <div>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             Account Number
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.employeeId || 'N/A'}
+                           </div>
+                         </div>
+                         <div>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             PPO ID
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.ppoUniqueId || 'N/A'}
+                           </div>
+                         </div>
+                         <div>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             Branch Code
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.branchCode || 'N/A'}
+                           </div>
+                         </div>
+                         <div>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             File ID
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.fileId || 'N/A'}
+                           </div>
+                         </div>
+                         <div style={{ gridColumn: '1 / -1' }}>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             Borrowed Date
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.borrowedDate ? new Date(record.borrowedDate).toLocaleDateString() : 'N/A'}
+                           </div>
+                         </div>
+                       </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '40px',
+                color: '#6b7280'
+              }}>
+                <div style={{ fontSize: '16px', marginBottom: '8px' }}>
+                  No records in possession
+                </div>
+                <div style={{ fontSize: '14px' }}>
+                  This user hasn't borrowed any records yet.
+                </div>
+              </div>
+            )}
+
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              marginTop: '20px',
+              paddingTop: '16px',
+              borderTop: '1px solid #e5e7eb'
+            }}>
+              <button 
+                onClick={() => {
+                  setShowUserRecordsModal(false)
+                  setSelectedUser(null)
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.backgroundColor = '#4b5563'
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.backgroundColor = '#6b7280'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </SimpleModal>
     </div>
-  )
+  </div>
+)
 }
 
 export default RecordManagerDashboard
