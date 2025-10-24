@@ -7,7 +7,7 @@ import SimpleModal from '../components/SimpleModal'
 import { useAuth } from '../contexts/AuthContext'
 
 const UserDashboard = () => {
-  const { user } = useAuth()
+  const { user, checkPasswordStatus } = useAuth()
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [recordToReturn, setRecordToReturn] = useState(null)
   const [showRequestModal, setShowRequestModal] = useState(false)
@@ -32,18 +32,18 @@ const UserDashboard = () => {
 
   // Check if user needs to change password (for users with default credentials)
   useEffect(() => {
-    // Check if user needs to change password
-    const checkPasswordReset = () => {
+    const checkPasswordReset = async () => {
       if (user) {
-        // Check if user is using default password
-        if (user.usingDefaultPassword) {
+        // Check password status from backend to ensure accuracy
+        const isUsingDefaultPassword = await checkPasswordStatus();
+        if (isUsingDefaultPassword) {
           setShowPasswordChangeModal(true);
         }
       }
     };
 
     checkPasswordReset();
-  }, [user]);
+  }, [user, checkPasswordStatus]);
 
   // Handle search
   const handleSearch = () => {

@@ -15,7 +15,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 
 const AdminDashboard = () => {
-  const { user } = useAuth()
+  const { user, checkPasswordStatus } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
 
   const [showAddUser, setShowAddUser] = useState(false)
@@ -45,17 +45,18 @@ const AdminDashboard = () => {
 
   // Check if user needs to change password (for users with default credentials)
   useEffect(() => {
-    const checkPasswordReset = () => {
+    const checkPasswordReset = async () => {
       if (user) {
-        // Check if user is using default password
-        if (user.usingDefaultPassword) {
+        // Check password status from backend to ensure accuracy
+        const isUsingDefaultPassword = await checkPasswordStatus();
+        if (isUsingDefaultPassword) {
           setShowPasswordChangeModal(true);
         }
       }
     };
 
     checkPasswordReset();
-  }, [user]);
+  }, [user, checkPasswordStatus]);
 
   const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {

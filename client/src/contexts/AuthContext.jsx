@@ -32,16 +32,10 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const response = await axios.get('/api/auth/me')
-      const user = response.data.user
+      const user = response.data
       
-      // Check if user might be using default password (we can't know for sure from server)
-      // This is a fallback for when user refreshes the page
-      const userWithPasswordFlag = {
-        ...user,
-        usingDefaultPassword: false // Default to false, will be set during login
-      }
-      
-      setUser(userWithPasswordFlag)
+      // The backend now includes usingDefaultPassword flag
+      setUser(user)
     } catch (error) {
       localStorage.removeItem('token')
       delete axios.defaults.headers.common['Authorization']
@@ -55,20 +49,12 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post('/api/auth/login', { email, password })
       const { token, user } = response.data
       
-      // Check if user is using default password
-      const isDefaultPassword = password === 'password' || password === 'password123'
-      
-      // Add flag to user object to indicate default password usage
-      const userWithPasswordFlag = {
-        ...user,
-        usingDefaultPassword: isDefaultPassword
-      }
-      
+      // The backend now includes usingDefaultPassword flag in the response
       localStorage.setItem('token', token)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      setUser(userWithPasswordFlag)
+      setUser(user)
       
-      return { success: true, user: userWithPasswordFlag }
+      return { success: true, user }
     } catch (error) {
       return { 
         success: false, 
@@ -95,6 +81,25 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const checkPasswordStatus = async () => {
+    try {
+      const response = await axios.get('/api/auth/check-password-status')
+      const { usingDefaultPassword } = response.data
+      
+      if (user) {
+        setUser(prevUser => ({
+          ...prevUser,
+          usingDefaultPassword
+        }))
+      }
+      
+      return usingDefaultPassword
+    } catch (error) {
+      console.error('Error checking password status:', error)
+      return false
+    }
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
     delete axios.defaults.headers.common['Authorization']
@@ -107,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    checkPasswordStatus,
     isAdmin: user?.role === 'admin'
   }
 

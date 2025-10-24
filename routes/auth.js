@@ -127,18 +127,52 @@ router.post('/login', [
 // @access  Private
 router.get('/me', auth, async (req, res) => {
   try {
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Check if user is using default password by testing against common defaults
+    const bcrypt = require('bcryptjs');
+    const isDefaultPassword = await bcrypt.compare('password', user.password) || 
+                             await bcrypt.compare('password123', user.password);
+    
     res.json({
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role
-      }
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      usingDefaultPassword: isDefaultPassword
     });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// @route   GET /api/auth/check-password-status
+// @desc    Check if user needs to change password
+// @access  Private
+router.get('/check-password-status', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Check if user is using default password
+    const bcrypt = require('bcryptjs');
+    const isDefaultPassword = await bcrypt.compare('password', user.password) || 
+                             await bcrypt.compare('password123', user.password);
+    
+    res.json({
+      usingDefaultPassword: isDefaultPassword
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 module.exports = router;
