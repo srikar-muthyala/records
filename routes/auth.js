@@ -102,13 +102,18 @@ router.post('/login', [
 
     const token = generateToken(user._id);
 
+    // Check if user is using default password
+    const isDefaultPassword = password === 'password' || password === 'password123';
+    const usingDefaultPassword = isDefaultPassword;
+
     res.json({
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        usingDefaultPassword
       }
     });
   } catch (error) {

@@ -10,11 +10,12 @@ import { FiUsers, FiBook, FiX, FiPlus, FiUpload, FiEdit, FiTrash2, FiRefreshCw }
 import SimpleModal from '../components/SimpleModal'
 
 import SimpleFormField from '../components/SimpleFormField'
+import { useAuth } from '../contexts/AuthContext'
 
 
 
 const AdminDashboard = () => {
-
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
 
   const [showAddUser, setShowAddUser] = useState(false)
@@ -37,6 +38,57 @@ const AdminDashboard = () => {
   const [recordsPerPage, setRecordsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
 
+  // Password change functionality
+  const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+
+  // Check if user needs to change password (for users with default credentials)
+  useEffect(() => {
+    const checkPasswordReset = () => {
+      if (user) {
+        // Check if user is using default password
+        if (user.usingDefaultPassword) {
+          setShowPasswordChangeModal(true);
+        }
+      }
+    };
+
+    checkPasswordReset();
+  }, [user]);
+
+  const handlePasswordChange = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
+    try {
+      await axios.put('/api/user/change-password', {
+        newPassword,
+        confirmPassword
+      })
+      toast.success('Password changed successfully')
+      setShowPasswordChangeModal(false)
+      setNewPassword('')
+      setConfirmPassword('')
+      
+      // Update user object to clear default password flag
+      if (user) {
+        const updatedUser = { ...user, usingDefaultPassword: false }
+        // You might need to update the user in AuthContext here
+        // For now, refresh the page to ensure clean state
+        window.location.reload()
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to change password')
+    }
+  }
 
   // Dashboard stats
 
@@ -3886,6 +3938,159 @@ const AdminDashboard = () => {
           }
         }
       `}</style>
+
+      {/* Password Change Modal */}
+      {showPasswordChangeModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 1000,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '40px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            maxWidth: '500px',
+            width: '100%',
+            margin: '20px',
+            position: 'relative',
+            zIndex: 1001
+          }}>
+            <h2 style={{ 
+              textAlign: 'center', 
+              marginBottom: '20px', 
+              color: '#1f2937',
+              fontSize: '24px',
+              fontWeight: '600'
+            }}>
+              Change Your Password
+            </h2>
+            <p style={{ 
+              textAlign: 'center', 
+              color: '#6b7280', 
+              marginBottom: '30px',
+              fontSize: '16px'
+            }}>
+              For security reasons, you must change your password before continuing.
+            </p>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#374151', 
+                marginBottom: '8px' 
+              }}>
+                New Password
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb'
+                  e.target.style.boxShadow = 'none'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '30px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#374151', 
+                marginBottom: '8px' 
+              }}>
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb'
+                  e.target.style.boxShadow = 'none'
+                }}
+              />
+            </div>
+            
+            <button
+              style={{
+                width: '100%',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                border: 'none',
+                fontSize: '16px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              }}
+              onClick={handlePasswordChange}
+              onMouseOver={(e) => {
+                e.target.style.backgroundColor = '#2563eb'
+                e.target.style.transform = 'translateY(-1px)'
+                e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)'
+              }}
+              onMouseOut={(e) => {
+                e.target.style.backgroundColor = '#3b82f6'
+                e.target.style.transform = 'translateY(0)'
+                e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <FiRefreshCw size={18} />
+              Change Password
+            </button>
+          </div>
+        </div>
+      )}
+
 
           </div>
 

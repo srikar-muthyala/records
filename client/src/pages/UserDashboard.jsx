@@ -244,8 +244,21 @@ const UserDashboard = () => {
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        backgroundColor: '#f9fafb'
+        backgroundColor: '#f9fafb',
+        position: 'relative'
       }}>
+        {/* Backdrop blur overlay */}
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 1000
+        }} />
         <div style={{
           backgroundColor: 'white',
           padding: '40px',
@@ -253,7 +266,9 @@ const UserDashboard = () => {
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
           maxWidth: '500px',
           width: '100%',
-          margin: '20px'
+          margin: '20px',
+          position: 'relative',
+          zIndex: 1001
         }}>
           <h2 style={{ 
             textAlign: 'center', 
