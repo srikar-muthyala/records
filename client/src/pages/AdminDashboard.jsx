@@ -2206,7 +2206,25 @@ const AdminDashboard = () => {
               {/* Mobile Card View for Users */}
               <div className="mobile-card-view" style={{ display: 'none' }}>
                 {usersData?.map(user => (
-                  <div key={user._id} className="mobile-card">
+                  <div 
+                    key={user._id} 
+                    className="mobile-card"
+                    onClick={() => handleUserClick(user)}
+                    style={{ 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f9fafb'
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.backgroundColor = 'white'
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                    }}
+                  >
                     <div className="mobile-card-header">
                       <h4 className="mobile-card-title">{user.name}</h4>
                       <div className="mobile-card-status">
@@ -2235,24 +2253,69 @@ const AdminDashboard = () => {
                         </span>
                         </div>
                       </div>
+                      <div className="mobile-card-detail">
+                        <div className="mobile-card-label">Records in Possession</div>
+                        <div className="mobile-card-value">
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '6px' 
+                          }}>
+                            <span style={{ 
+                              fontSize: '16px', 
+                              fontWeight: '700', 
+                              color: user.recordsInPossession > 0 ? '#3b82f6' : '#6b7280' 
+                            }}>
+                              {user.recordsInPossession || 0}
+                            </span>
+                            {user.recordsInPossession > 0 && (
+                              <span style={{ 
+                                fontSize: '10px', 
+                                color: '#6b7280',
+                                backgroundColor: '#f3f4f6',
+                                padding: '1px 4px',
+                                borderRadius: '3px'
+                              }}>
+                                record{user.recordsInPossession !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     
                     <div className="mobile-card-actions">
-                            <button
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleUserClick(user)
+                        }}
+                        style={{ fontSize: '12px', padding: '6px 12px', marginRight: '8px' }}
+                      >
+                        <FiUsers /> View Records
+                      </button>
+                      <button
                         className="btn btn-warning btn-sm"
-                        onClick={() => handleEditUser(user)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEditUser(user)
+                        }}
                         style={{ fontSize: '12px', padding: '6px 12px', marginRight: '8px' }}
                       >
                         <FiEdit /> Edit
-                            </button>
-                            <button
+                      </button>
+                      <button
                         className="btn btn-danger btn-sm"
-                        onClick={() => handleDeleteUser(user._id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteUser(user._id)
+                        }}
                         style={{ fontSize: '12px', padding: '6px 12px' }}
                       >
                         <FiTrash2 /> Delete
-                            </button>
-                          </div>
+                      </button>
+                    </div>
                   </div>
                   ))}
             </div>
@@ -4185,6 +4248,17 @@ const AdminDashboard = () => {
               padding: 8px 12px !important;
               font-size: 12px !important;
               border-radius: 6px !important;
+            }
+          }
+
+          /* Mobile Records View for User Records Modal */
+          @media (max-width: 768px) {
+            .mobile-records-view {
+              display: block !important;
+            }
+            
+            .table-container {
+              display: none !important;
             }
           }
         }

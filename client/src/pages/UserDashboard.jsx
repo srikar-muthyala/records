@@ -3169,6 +3169,17 @@ const UserDashboard = () => {
               border-radius: 6px !important;
             }
           }
+
+          /* Mobile Records View for User Records Modal */
+          @media (max-width: 768px) {
+            .mobile-records-view {
+              display: block !important;
+            }
+            
+            .table-container {
+              display: none !important;
+            }
+          }
         }
       `}</style>
     </div>
