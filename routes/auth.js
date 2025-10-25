@@ -1,10 +1,16 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Test endpoint for debugging
+router.get('/test', (req, res) => {
+  res.json({ message: 'Auth routes are working!' });
+});
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -127,15 +133,20 @@ router.post('/login', [
 // @access  Private
 router.get('/me', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     
     // Check if user is using default password by testing against common defaults
-    const bcrypt = require('bcryptjs');
-    const isDefaultPassword = await bcrypt.compare('password', user.password) || 
-                             await bcrypt.compare('password123', user.password);
+    let isDefaultPassword = false;
+    try {
+      isDefaultPassword = await bcrypt.compare('password', user.password) || 
+                        await bcrypt.compare('password123', user.password);
+    } catch (bcryptError) {
+      console.error('Bcrypt comparison error:', bcryptError);
+      isDefaultPassword = false;
+    }
     
     res.json({
       id: user._id,
@@ -145,7 +156,7 @@ router.get('/me', auth, async (req, res) => {
       usingDefaultPassword: isDefaultPassword
     });
   } catch (error) {
-    console.error(error.message);
+    console.error('Error in /api/auth/me:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -161,15 +172,20 @@ router.get('/check-password-status', auth, async (req, res) => {
     }
     
     // Check if user is using default password
-    const bcrypt = require('bcryptjs');
-    const isDefaultPassword = await bcrypt.compare('password', user.password) || 
-                             await bcrypt.compare('password123', user.password);
+    let isDefaultPassword = false;
+    try {
+      isDefaultPassword = await bcrypt.compare('password', user.password) || 
+                        await bcrypt.compare('password123', user.password);
+    } catch (bcryptError) {
+      console.error('Bcrypt comparison error in check-password-status:', bcryptError);
+      isDefaultPassword = false;
+    }
     
     res.json({
       usingDefaultPassword: isDefaultPassword
     });
   } catch (error) {
-    console.error(error.message);
+    console.error('Error in check-password-status:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

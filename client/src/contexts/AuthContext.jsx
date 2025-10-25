@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import axios from 'axios'
 
 // Configure axios base URL
@@ -18,6 +18,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const passwordStatusChecked = useRef(false)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -53,6 +54,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(user)
+      passwordStatusChecked.current = false
       
       return { success: true, user }
     } catch (error) {
@@ -71,6 +73,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(user)
+      passwordStatusChecked.current = false
       
       return { success: true, user }
     } catch (error) {
@@ -81,10 +84,17 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const checkPasswordStatus = async () => {
+  const checkPasswordStatus = useCallback(async () => {
+    // Avoid multiple calls if we've already checked recently
+    if (passwordStatusChecked.current) {
+      return user?.usingDefaultPassword || false
+    }
+    
     try {
       const response = await axios.get('/api/auth/check-password-status')
       const { usingDefaultPassword } = response.data
+      
+      passwordStatusChecked.current = true
       
       if (user) {
         setUser(prevUser => ({
@@ -98,12 +108,13 @@ export const AuthProvider = ({ children }) => {
       console.error('Error checking password status:', error)
       return false
     }
-  }
+  }, [user])
 
   const logout = () => {
     localStorage.removeItem('token')
     delete axios.defaults.headers.common['Authorization']
     setUser(null)
+    passwordStatusChecked.current = false
   }
 
   const value = {

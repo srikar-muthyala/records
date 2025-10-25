@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useQuery } from 'react-query'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FiSearch, FiPlus, FiEye, FiX, FiRotateCcw, FiRefreshCw, FiBook } from 'react-icons/fi'
+import { FiSearch, FiPlus, FiEye, FiX, FiRotateCcw, FiRefreshCw, FiBook, FiUsers } from 'react-icons/fi'
 import SimpleModal from '../components/SimpleModal'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -30,15 +30,22 @@ const UserDashboard = () => {
   const [requestsToMeCurrentPage, setRequestsToMeCurrentPage] = useState(1)
   const [requestsToMePerPage, setRequestsToMePerPage] = useState(10)
 
+  // User records modal state
+  const [showUserRecordsModal, setShowUserRecordsModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
+
   // Check if user needs to change password (for users with default credentials)
   useEffect(() => {
     const checkPasswordReset = async () => {
-      if (user) {
-        // Check password status from backend to ensure accuracy
+      if (user && !user.usingDefaultPassword) {
+        // Only check if we don't already know the status
         const isUsingDefaultPassword = await checkPasswordStatus();
         if (isUsingDefaultPassword) {
           setShowPasswordChangeModal(true);
         }
+      } else if (user && user.usingDefaultPassword) {
+        // If we already know they're using default password, show modal
+        setShowPasswordChangeModal(true);
       }
     };
 
@@ -100,6 +107,25 @@ const UserDashboard = () => {
     () => axios.get('/api/user/requests-to-me'),
     {
       select: (data) => data.data
+    }
+  )
+
+  // Users with record counts
+  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery(
+    'users',
+    () => axios.get('/api/user/users-with-records'),
+    {
+      select: (data) => data.data
+    }
+  )
+
+  // User records query
+  const { data: userRecordsData, isLoading: userRecordsLoading, refetch: refetchUserRecords } = useQuery(
+    ['userRecords', selectedUser?._id],
+    () => axios.get(`/api/user/users/${selectedUser._id}/records`),
+    {
+      select: (data) => data.data,
+      enabled: !!selectedUser
     }
   )
 
@@ -209,6 +235,11 @@ const UserDashboard = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to confirm receipt')
     }
+  }
+
+  const handleUserClick = (user) => {
+    setSelectedUser(user)
+    setShowUserRecordsModal(true)
   }
 
   const getStatusBadge = (status) => {
@@ -626,6 +657,56 @@ const UserDashboard = () => {
           </div>
           <div style={{ fontSize: '14px', color: '#6b7280' }}>
             Approve or reject requests
+          </div>
+        </div>
+
+        <div 
+          className="stat-card"
+          onClick={() => setActiveSection('users')}
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            borderLeft: '4px solid #ef4444'
+          }}
+          onMouseOver={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(-2px)'
+              e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }
+          }}
+          onMouseOut={(e) => {
+            if (e.target.classList.contains('stat-card')) {
+              e.target.style.transform = 'translateY(0)'
+              e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              backgroundColor: '#fee2e2', 
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <FiUsers size={20} color="#ef4444" />
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#ef4444' }}>
+              {usersData?.length || 0}
+            </div>
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '4px' }}>
+            Users
+          </div>
+          <div style={{ fontSize: '14px', color: '#6b7280' }}>
+            View other users and their records
           </div>
         </div>
       </div>
@@ -1997,6 +2078,167 @@ const UserDashboard = () => {
       </div>
       )}
 
+      {/* Users */}
+      {activeSection === 'users' && (
+      <div className="card mb-4">
+        <div className="card-header" style={{
+          backgroundColor: '#f8fafc',
+          borderBottom: '1px solid #e5e7eb',
+          padding: '20px 24px'
+        }}>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: '#1f2937',
+            margin: '0 0 4px 0',
+            letterSpacing: '-0.025em'
+          }}>
+            Users & Record Possession
+          </h3>
+          <p style={{
+            fontSize: '14px',
+            color: '#6b7280',
+            margin: '0',
+            fontWeight: '400'
+          }}>
+            View other users and the number of records they currently have borrowed
+          </p>
+          </div>
+        
+        {usersLoading ? (
+          <div className="loading"><div className="spinner"></div></div>
+        ) : usersData?.length > 0 ? (
+          <>
+            <div className="table-responsive">
+              <table className="table">
+              <thead>
+                <tr>
+                  <th>User Name</th>
+                  <th>Email</th>
+                  <th>Records in Possession</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usersData.map(user => (
+                  <tr 
+                    key={user._id}
+                    onClick={() => handleUserClick(user)}
+                    style={{ 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f9fafb'
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }}
+                  >
+                    <td style={{ fontWeight: '500' }}>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px' 
+                      }}>
+                        <span style={{ 
+                        fontSize: '18px', 
+                        fontWeight: '700', 
+                        color: user.recordsInPossession > 0 ? '#3b82f6' : '#6b7280' 
+                      }}>
+                        {user.recordsInPossession || 0}
+                      </span>
+                      {user.recordsInPossession > 0 && (
+                        <span style={{ 
+                          fontSize: '12px', 
+                          color: '#6b7280',
+                          backgroundColor: '#f3f4f6',
+                          padding: '2px 6px',
+                          borderRadius: '4px'
+                        }}>
+                          record{user.recordsInPossession !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View for Users */}
+            <div className="mobile-card-view" style={{ display: 'none' }}>
+              {usersData.map(user => (
+                <div 
+                  key={user._id} 
+                  className="mobile-card"
+                  onClick={() => handleUserClick(user)}
+                  style={{ 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f9fafb'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  <div className="mobile-card-header">
+                    <h4 className="mobile-card-title">{user.name}</h4>
+                  </div>
+                  
+                  <div className="mobile-card-details">
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Email</div>
+                      <div className="mobile-card-value">{user.email}</div>
+                    </div>
+                    <div className="mobile-card-detail">
+                      <div className="mobile-card-label">Records in Possession</div>
+                      <div className="mobile-card-value">
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '6px' 
+                        }}>
+                          <span style={{ 
+                            fontSize: '16px', 
+                            fontWeight: '700', 
+                            color: user.recordsInPossession > 0 ? '#3b82f6' : '#6b7280' 
+                          }}>
+                            {user.recordsInPossession || 0}
+                          </span>
+                          {user.recordsInPossession > 0 && (
+                            <span style={{ 
+                              fontSize: '10px', 
+                              color: '#6b7280',
+                              backgroundColor: '#f3f4f6',
+                              padding: '1px 4px',
+                              borderRadius: '3px'
+                            }}>
+                              record{user.recordsInPossession !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-center">No users found</p>
+        )}
+      </div>
+      )}
+
       {/* Return Confirmation Modal */}
       <SimpleModal
         isOpen={showReturnModal}
@@ -2360,6 +2602,194 @@ const UserDashboard = () => {
             </button>
           </div>
         </div>
+      </SimpleModal>
+
+      {/* User Records Modal */}
+      <SimpleModal
+        isOpen={showUserRecordsModal}
+        onClose={() => {
+          setShowUserRecordsModal(false)
+          setSelectedUser(null)
+        }}
+        title={`Records for ${selectedUser?.name || 'User'}`}
+      >
+        {selectedUser && (
+          <div>
+            <div style={{ 
+              marginBottom: '20px', 
+              padding: '16px', 
+              backgroundColor: '#f8fafc', 
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <h4 style={{ margin: '0 0 8px 0', color: '#1f2937', fontSize: '16px' }}>
+                {selectedUser.name}
+              </h4>
+              <p style={{ margin: '0', color: '#6b7280', fontSize: '14px' }}>
+                {selectedUser.email}
+              </p>
+              <p style={{ margin: '8px 0 0 0', color: '#374151', fontSize: '14px', fontWeight: '500' }}>
+                Total Records: {selectedUser.recordsInPossession || 0}
+              </p>
+            </div>
+
+            {userRecordsLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <div>Loading records...</div>
+              </div>
+            ) : userRecordsData?.length > 0 ? (
+              <>
+                 {/* Desktop Table View */}
+                 <div className="table-container" style={{ display: 'block' }}>
+                   <table className="data-table">
+                     <thead>
+                       <tr>
+                         <th>Record Title</th>
+                         <th>Category</th>
+                         <th>Account Number</th>
+                         <th>PPO ID</th>
+                         <th>Branch Code</th>
+                         <th>File ID</th>
+                         <th>Borrowed Date</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {userRecordsData.map(record => (
+                         <tr key={record._id}>
+                           <td style={{ fontWeight: '500' }}>{record.name || record.title}</td>
+                           <td>{record.category}</td>
+                           <td>{record.employeeId || 'N/A'}</td>
+                           <td>{record.ppoUniqueId || 'N/A'}</td>
+                           <td>{record.branchCode || 'N/A'}</td>
+                           <td>{record.fileId || 'N/A'}</td>
+                           <td style={{ color: '#6b7280', fontSize: '13px' }}>
+                             {record.borrowedDate ? new Date(record.borrowedDate).toLocaleDateString() : 'N/A'}
+                           </td>
+                         </tr>
+                       ))}
+                     </tbody>
+                   </table>
+                 </div>
+
+                {/* Mobile Card View */}
+                <div className="mobile-records-view" style={{ display: 'none' }}>
+                  {userRecordsData.map(record => (
+                    <div key={record._id} className="mobile-record-card" style={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      marginBottom: '12px',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                    }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'flex-start',
+                        marginBottom: '12px'
+                      }}>
+                        <h5 style={{ 
+                          margin: '0', 
+                          fontSize: '16px', 
+                          fontWeight: '600', 
+                          color: '#1f2937' 
+                        }}>
+                          {record.name || record.title}
+                        </h5>
+                        <span style={{
+                          fontSize: '12px',
+                          color: '#6b7280',
+                          backgroundColor: '#f3f4f6',
+                          padding: '4px 8px',
+                          borderRadius: '4px'
+                        }}>
+                          {record.category}
+                        </span>
+                      </div>
+                      
+                       <div style={{ 
+                         display: 'grid', 
+                         gridTemplateColumns: '1fr 1fr', 
+                         gap: '8px',
+                         fontSize: '14px'
+                       }}>
+                         <div>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             Account Number
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.employeeId || 'N/A'}
+                           </div>
+                         </div>
+                         <div>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             PPO ID
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.ppoUniqueId || 'N/A'}
+                           </div>
+                         </div>
+                         <div>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             Branch Code
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.branchCode || 'N/A'}
+                           </div>
+                         </div>
+                         <div>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             File ID
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.fileId || 'N/A'}
+                           </div>
+                         </div>
+                         <div style={{ gridColumn: '1 / -1' }}>
+                           <div style={{ 
+                             fontSize: '12px', 
+                             color: '#6b7280', 
+                             fontWeight: '500',
+                             marginBottom: '2px'
+                           }}>
+                             Borrowed Date
+                           </div>
+                           <div style={{ color: '#374151', fontWeight: '500' }}>
+                             {record.borrowedDate ? new Date(record.borrowedDate).toLocaleDateString() : 'N/A'}
+                           </div>
+                         </div>
+                       </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                No records currently borrowed by this user.
+              </div>
+            )}
+          </div>
+        )}
       </SimpleModal>
       
       <style jsx>{`

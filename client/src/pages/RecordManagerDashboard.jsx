@@ -31,12 +31,15 @@ const RecordManagerDashboard = () => {
   // Check if user needs to change password (for users with default credentials)
   useEffect(() => {
     const checkPasswordReset = async () => {
-      if (user) {
-        // Check password status from backend to ensure accuracy
+      if (user && !user.usingDefaultPassword) {
+        // Only check if we don't already know the status
         const isUsingDefaultPassword = await checkPasswordStatus();
         if (isUsingDefaultPassword) {
           setShowPasswordChangeModal(true);
         }
+      } else if (user && user.usingDefaultPassword) {
+        // If we already know they're using default password, show modal
+        setShowPasswordChangeModal(true);
       }
     };
 
