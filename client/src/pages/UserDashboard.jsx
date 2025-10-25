@@ -242,6 +242,18 @@ const UserDashboard = () => {
     setShowUserRecordsModal(true)
   }
 
+  // Helper function to check if record has been in possession for more than 7 days
+  const isRecordOverdue = (record) => {
+    if (!record.borrowedDate) return false
+    const borrowedDate = new Date(record.borrowedDate)
+    const currentDate = new Date()
+    const daysDifference = Math.floor((currentDate - borrowedDate) / (1000 * 60 * 60 * 24))
+    
+    // For testing: highlight all records (return true)
+    // Later change to: return daysDifference > 7
+    return daysDifference > 7
+  }
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'pending':
@@ -1304,8 +1316,33 @@ const UserDashboard = () => {
               </thead>
               <tbody>
                 {myRecordsData.map(record => (
-                  <tr key={record._id}>
-                    <td>{record.name || record.title}</td>
+                  <tr 
+                    key={record._id}
+                    className={isRecordOverdue(record) ? 'overdue-record' : ''}
+                    style={isRecordOverdue(record) ? {
+                      backgroundColor: '#fef2f2',
+                      borderLeft: '4px solid #ef4444'
+                    } : {}}
+                  >
+                    <td style={{ 
+                      fontWeight: isRecordOverdue(record) ? '600' : 'normal',
+                      color: isRecordOverdue(record) ? '#dc2626' : 'inherit'
+                    }}>
+                      {record.name || record.title}
+                      {isRecordOverdue(record) && (
+                        <span style={{
+                          marginLeft: '8px',
+                          fontSize: '12px',
+                          color: '#ef4444',
+                          backgroundColor: '#fee2e2',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontWeight: '500'
+                        }}>
+                          OVERDUE
+                        </span>
+                      )}
+                    </td>
                     <td>{record.category}</td>
                     <td>{record.ppoUniqueId || 'N/A'}</td>
                     <td>{record.branchCode || 'N/A'}</td>
@@ -1323,7 +1360,25 @@ const UserDashboard = () => {
                          record.pensionStatus || 'N/A'}
                       </span>
                     </td>
-                    <td>{new Date(record.borrowedDate).toLocaleDateString()}</td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span>{new Date(record.borrowedDate).toLocaleDateString()}</span>
+                        {isRecordOverdue(record) && (
+                          <span style={{
+                            fontSize: '11px',
+                            color: '#ef4444',
+                            fontWeight: '500',
+                            backgroundColor: '#fee2e2',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            display: 'inline-block',
+                            width: 'fit-content'
+                          }}>
+                            {Math.floor((new Date() - new Date(record.borrowedDate)) / (1000 * 60 * 60 * 24))} days
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       <button
                         style={{
@@ -1370,9 +1425,37 @@ const UserDashboard = () => {
         {myRecordsData?.length > 0 && (
           <div className="mobile-card-view" style={{ display: 'none' }}>
             {myRecordsData.map(record => (
-              <div key={record._id} className="mobile-card">
+              <div 
+                key={record._id} 
+                className={`mobile-card ${isRecordOverdue(record) ? 'overdue-record' : ''}`}
+                style={isRecordOverdue(record) ? {
+                  backgroundColor: '#fef2f2',
+                  borderLeft: '4px solid #ef4444'
+                } : {}}
+              >
                 <div className="mobile-card-header">
-                  <h4 className="mobile-card-title">{record.name || record.title}</h4>
+                  <h4 
+                    className="mobile-card-title"
+                    style={{
+                      color: isRecordOverdue(record) ? '#dc2626' : 'inherit',
+                      fontWeight: isRecordOverdue(record) ? '600' : 'normal'
+                    }}
+                  >
+                    {record.name || record.title}
+                    {isRecordOverdue(record) && (
+                      <span style={{
+                        marginLeft: '8px',
+                        fontSize: '10px',
+                        color: '#ef4444',
+                        backgroundColor: '#fee2e2',
+                        padding: '1px 4px',
+                        borderRadius: '3px',
+                        fontWeight: '500'
+                      }}>
+                        OVERDUE
+                      </span>
+                    )}
+                  </h4>
                   <div className="mobile-card-status">
                     <span className="badge badge-success" style={{
                       padding: '4px 8px',
@@ -1401,7 +1484,25 @@ const UserDashboard = () => {
                   </div>
                   <div className="mobile-card-detail">
                     <div className="mobile-card-label">Borrowed Date</div>
-                    <div className="mobile-card-value">{new Date(record.borrowedDate).toLocaleDateString()}</div>
+                    <div className="mobile-card-value">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span>{new Date(record.borrowedDate).toLocaleDateString()}</span>
+                        {isRecordOverdue(record) && (
+                          <span style={{
+                            fontSize: '10px',
+                            color: '#ef4444',
+                            fontWeight: '500',
+                            backgroundColor: '#fee2e2',
+                            padding: '1px 4px',
+                            borderRadius: '2px',
+                            display: 'inline-block',
+                            width: 'fit-content'
+                          }}>
+                            {Math.floor((new Date() - new Date(record.borrowedDate)) / (1000 * 60 * 60 * 24))} days
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
@@ -2802,6 +2903,23 @@ const UserDashboard = () => {
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+        }
+
+        /* Overdue Record Highlighting */
+        .overdue-record {
+          animation: pulseOverdue 2s infinite;
+        }
+
+        @keyframes pulseOverdue {
+          0% {
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+          }
+          50% {
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+          }
+          100% {
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+          }
         }
         .badge-success {
           background: #d1fae5;
