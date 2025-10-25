@@ -408,21 +408,17 @@ router.put('/requests/:id/approve', auth, async (req, res) => {
       return res.status(400).json({ message: 'Request is not pending' });
     }
 
-    // Update request status
-    request.status = 'approved';
+    // Update request status to awaiting confirmation
+    request.status = 'awaiting_confirmation';
     request.processedBy = req.user._id;
     request.processedAt = new Date();
-    request.adminResponse = 'Request approved by record holder';
+    request.adminResponse = 'Request approved by record holder. Please confirm receipt of the record.';
     await request.save();
 
-    // Transfer the record to the requesting user
-    const record = await Record.findById(request.record._id);
-    record.currentHolder = request.user._id;
-    record.status = 'borrowed';
-    record.borrowedDate = new Date();
-    await record.save();
+    // Note: Record transfer will happen when user confirms receipt
+    // The record remains with the current holder until confirmation
 
-    res.json({ message: 'Request approved successfully' });
+    res.json({ message: 'Request approved successfully. Awaiting confirmation from requester.' });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });
@@ -519,15 +515,16 @@ router.put('/confirm-receipt/:requestId', auth, async (req, res) => {
       return res.status(400).json({ message: 'This request is not awaiting confirmation' });
     }
 
-    // Update the record to borrowed status
+    // Update the record to borrowed status and transfer to requester
     const record = request.record;
     record.status = 'borrowed';
     record.currentHolder = req.user._id;
     record.borrowedDate = new Date();
     await record.save();
 
-    // Update the request status
+    // Update the request status to handed_over
     request.status = 'handed_over';
+    request.confirmedAt = new Date();
     await request.save();
 
     res.json({ 
